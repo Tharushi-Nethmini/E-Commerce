@@ -2,6 +2,7 @@ package com.ecommerce.user.service;
 
 import com.ecommerce.user.dto.*;
 import com.ecommerce.user.model.User;
+import com.ecommerce.user.model.UserRole;
 import com.ecommerce.user.repository.UserRepository;
 import com.ecommerce.user.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +45,7 @@ public class UserService {
         user.setFullName(request.getFullName());
         user.setPhone(request.getPhone());
         user.setAddress(request.getAddress());
+        user.setRole(request.getRole() != null ? request.getRole() : UserRole.CUSTOMER);
         
         User savedUser = userRepository.save(user);
         log.info("User registered successfully: {}", savedUser.getUsername());
@@ -132,6 +134,39 @@ public class UserService {
         User updatedUser = userRepository.save(user);
         log.info("User updated successfully: {}", updatedUser.getUsername());
         
+        return mapToUserResponse(updatedUser);
+    }
+
+    @Transactional
+    public UserResponse partialUpdateUser(Long id, UserUpdateRequest request) {
+        log.info("Partially updating user: {}", id);
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
+
+        if (request.getUsername() != null && !request.getUsername().isBlank()) {
+            if (!user.getUsername().equals(request.getUsername()) && userRepository.existsByUsername(request.getUsername())) {
+                throw new RuntimeException("Username already exists");
+            }
+            user.setUsername(request.getUsername());
+        }
+        if (request.getEmail() != null && !request.getEmail().isBlank()) {
+            if (!user.getEmail().equals(request.getEmail()) && userRepository.existsByEmail(request.getEmail())) {
+                throw new RuntimeException("Email already exists");
+            }
+            user.setEmail(request.getEmail());
+        }
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+        if (request.getFullName() != null) user.setFullName(request.getFullName());
+        if (request.getPhone() != null) user.setPhone(request.getPhone());
+        if (request.getAddress() != null) user.setAddress(request.getAddress());
+        if (request.getRole() != null) user.setRole(request.getRole());
+
+        User updatedUser = userRepository.save(user);
+        log.info("User partially updated successfully: {}", updatedUser.getUsername());
+
         return mapToUserResponse(updatedUser);
     }
     

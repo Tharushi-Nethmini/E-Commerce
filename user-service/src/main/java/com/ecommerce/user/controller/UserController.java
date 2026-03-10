@@ -83,6 +83,16 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
     
+    @PatchMapping("/{id}")
+    @Operation(summary = "Partially update user profile (only send fields you want to change)")
+    public ResponseEntity<UserResponse> partialUpdateUser(
+            @PathVariable Long id,
+            @Valid @RequestBody UserUpdateRequest request) {
+        log.info("PATCH /api/users/{} - Partially updating user", id);
+        UserResponse response = userService.partialUpdateUser(id, request);
+        return ResponseEntity.ok(response);
+    }
+
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete user")
     public ResponseEntity<Map<String, String>> deleteUser(@PathVariable Long id) {
