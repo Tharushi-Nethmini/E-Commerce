@@ -26,10 +26,16 @@ public class JwtTokenProvider {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes());
     }
     
-    public String generateToken(String username, Long userId) {
+    public String generateToken(String username, Long userId, String role) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
+        claims.put("role", role);
         return createToken(claims, username);
+    }
+
+    public String getRoleFromToken(String token) {
+        Claims claims = getAllClaimsFromToken(token);
+        return claims.get("role", String.class);
     }
     
     private String createToken(Map<String, Object> claims, String subject) {

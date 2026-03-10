@@ -51,13 +51,14 @@ public class UserService {
         log.info("User registered successfully: {}", savedUser.getUsername());
         
         // Generate JWT token
-        String token = jwtTokenProvider.generateToken(savedUser.getUsername(), savedUser.getId());
+        String token = jwtTokenProvider.generateToken(savedUser.getUsername(), savedUser.getId(), savedUser.getRole().name());
         
         return AuthResponse.builder()
                 .token(token)
                 .userId(savedUser.getId())
                 .username(savedUser.getUsername())
                 .email(savedUser.getEmail())
+                .role(savedUser.getRole().name())
                 .build();
     }
     
@@ -78,13 +79,14 @@ public class UserService {
         log.info("User logged in successfully: {}", user.getUsername());
         
         // Generate JWT token
-        String token = jwtTokenProvider.generateToken(user.getUsername(), user.getId());
+        String token = jwtTokenProvider.generateToken(user.getUsername(), user.getId(), user.getRole().name());
         
         return AuthResponse.builder()
                 .token(token)
                 .userId(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
+                .role(user.getRole().name())
                 .build();
     }
     

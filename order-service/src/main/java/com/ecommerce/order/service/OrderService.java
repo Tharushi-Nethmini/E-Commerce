@@ -173,6 +173,15 @@ public class OrderService {
         log.info("Order cancelled successfully");
     }
     
+    @Transactional
+    public void deleteOrder(Long id) {
+        log.info("Deleting order: {}", id);
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found with ID: " + id));
+        orderRepository.delete(order);
+        log.info("Order deleted successfully: {}", id);
+    }
+    
     // Inter-service communication methods
     
     private UserResponse validateUser(Long userId) {

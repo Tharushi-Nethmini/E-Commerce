@@ -77,4 +77,12 @@ public class OrderController {
         orderService.cancelOrder(id);
         return ResponseEntity.ok(Map.of("message", "Order cancelled successfully"));
     }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete an order by ID")
+    public ResponseEntity<Map<String, String>> deleteOrder(@PathVariable Long id) {
+        log.info("DELETE /api/orders/{} - Deleting order", id);
+        orderService.deleteOrder(id);
+        return ResponseEntity.ok(Map.of("message", "Order deleted successfully"));
+    }
 }
