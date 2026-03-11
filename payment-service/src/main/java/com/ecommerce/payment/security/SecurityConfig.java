@@ -27,9 +27,10 @@ public class SecurityConfig {
                 .requestMatchers("/actuator/**").permitAll()
                 // Inter-service: order-service calls this without a user token
                 .requestMatchers(HttpMethod.POST, "/api/payments/process").permitAll()
-                // ADMIN only: view all payments, issue refunds
+                // ADMIN only: view all payments, issue refunds, delete
                 .requestMatchers(HttpMethod.GET, "/api/payments").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/payments/*/refund").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/payments/**").hasRole("ADMIN")
                 // CUSTOMER and ADMIN: view own payment by order or payment ID
                 .anyRequest().authenticated()
             )

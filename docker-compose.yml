@@ -48,6 +48,22 @@ services:
     networks:
       - ecommerce-network
 
+  # Frontend - React app served via Nginx
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - user-service
+      - inventory-service
+      - payment-service
+      - order-service
+    networks:
+      - ecommerce-network
+
   # Order Service (orchestrator - depends on other services)
   order-service:
     build:

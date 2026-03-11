@@ -133,6 +133,16 @@ public class PaymentService {
         return mapToResponse(refundedPayment, "Payment refunded successfully");
     }
     
+    @Transactional
+    public void deletePayment(Long id) {
+        log.info("Deleting payment: {}", id);
+        if (!paymentRepository.existsById(id)) {
+            throw new RuntimeException("Payment not found with ID: " + id);
+        }
+        paymentRepository.deleteById(id);
+        log.info("Payment {} deleted successfully", id);
+    }
+
     // Simulate payment gateway processing (90% success rate)
     private boolean simulatePaymentGateway() {
         try {

@@ -78,4 +78,12 @@ public class PaymentController {
         PaymentResponse response = paymentService.refundPayment(id);
         return ResponseEntity.ok(response);
     }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete a payment record (Admin only)")
+    public ResponseEntity<Void> deletePayment(@PathVariable Long id) {
+        log.info("DELETE /api/payments/{} - Deleting payment", id);
+        paymentService.deletePayment(id);
+        return ResponseEntity.noContent().build();
+    }
 }
