@@ -2,7 +2,10 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
-import { FaBox, FaShoppingCart, FaCreditCard, FaUsers, FaSignOutAlt } from 'react-icons/fa'
+import {
+  FaHome, FaBox, FaShoppingCart, FaCreditCard, FaUsers,
+  FaSignOutAlt, FaUserCircle, FaChartBar, FaStore
+} from 'react-icons/fa'
 import '@/styles/navbar.css'
 
 export default function Navbar() {
@@ -12,64 +15,73 @@ export default function Navbar() {
   if (!user) return null
 
   const isActive = (path) => pathname === path ? 'active' : ''
+  const isAdmin = user.role === 'ADMIN'
 
   return (
     <nav className="navbar">
       <div className="navbar-container">
         <div className="navbar-content">
-          <Link href="/" className="navbar-logo">
-            E-Commerce
+          <Link href={isAdmin ? '/analytics' : '/home'} className="navbar-logo">
+            <FaStore className="navbar-logo-icon" />
+            <span>NexMart</span>
           </Link>
-          
+
           <div className="navbar-menu">
-            <Link 
-              href="/products" 
-              className={`navbar-link ${isActive('/products')}`}
-            >
+            {/* Admin: Analytics first */}
+            {isAdmin && (
+              <Link href="/analytics" className={`navbar-link ${isActive('/analytics')}`}>
+                <FaChartBar />
+                <span>Analytics</span>
+              </Link>
+            )}
+
+            {/* User: Home first */}
+            {!isAdmin && (
+              <Link href="/home" className={`navbar-link ${isActive('/home')}`}>
+                <FaHome />
+                <span>Home</span>
+              </Link>
+            )}
+
+            <Link href="/products" className={`navbar-link ${isActive('/products')}`}>
               <FaBox />
-              Products
+              <span>Products</span>
             </Link>
-            
-            <Link 
-              href="/orders" 
-              className={`navbar-link ${isActive('/orders')}`}
-            >
+
+            <Link href="/orders" className={`navbar-link ${isActive('/orders')}`}>
               <FaShoppingCart />
-              Orders
+              <span>Orders</span>
             </Link>
-            
-            <Link 
-              href="/payments" 
-              className={`navbar-link ${isActive('/payments')}`}
-            >
+
+            <Link href="/payments" className={`navbar-link ${isActive('/payments')}`}>
               <FaCreditCard />
-              Payments
+              <span>Payments</span>
             </Link>
-            
-            {user.role === 'ADMIN' && (
-              <Link 
-                href="/users" 
-                className={`navbar-link ${isActive('/users')}`}
-              >
+
+            {!isAdmin && (
+              <Link href="/cart" className={`navbar-link ${isActive('/cart')}`}>
+                <FaShoppingCart />
+                <span>Cart</span>
+              </Link>
+            )}
+
+            {isAdmin && (
+              <Link href="/users" className={`navbar-link ${isActive('/users')}`}>
                 <FaUsers />
-                Users
+                <span>Users</span>
               </Link>
             )}
           </div>
 
           <div className="navbar-right">
-            <div className="navbar-user-info">
-              <span>
-                {user.username} ({user.role})
-              </span>
-            </div>
+            <Link href="/profile" className={`navbar-profile-link ${isActive('/profile')}`}>
+              <FaUserCircle />
+              <span>{user.username}</span>
+            </Link>
 
-            <button
-              onClick={logout}
-              className="navbar-logout-btn"
-            >
+            <button onClick={logout} className="navbar-logout-btn">
               <FaSignOutAlt />
-              Logout
+              <span>Logout</span>
             </button>
           </div>
         </div>

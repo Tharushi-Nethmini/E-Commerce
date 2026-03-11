@@ -1,4 +1,4 @@
-# Project Report: E-Commerce Microservices Application
+# Project Report: NexMart — Microservices E-Commerce Platform
 
 ## SE4010 - Current Trends in Software Engineering
 ## Cloud Computing Assignment - 2026
@@ -54,16 +54,17 @@ Our e-commerce application is built using a microservices architecture with four
 
 ### 1.2 Technology Stack
 
-- **Backend Framework:** Spring Boot 3.2.0
-- **Language:** Java 17
-- **Database:** H2 (development), PostgreSQL/MySQL (production)
+- **Backend Framework:** Express.js 4.x
+- **Language:** JavaScript (Node.js 20)
+- **Database:** MongoDB 7.0 with Mongoose ODM
 - **Containerization:** Docker with multi-stage builds
 - **Container Registry:** Docker Hub / AWS ECR / Azure ACR
 - **Cloud Platforms:** AWS ECS (Fargate) / Azure Container Apps
 - **CI/CD:** GitHub Actions
-- **API Documentation:** SpringDoc OpenAPI 3 (Swagger)
-- **Security:** Spring Security, JWT
+- **API Documentation:** Swagger/OpenAPI (swagger-jsdoc + swagger-ui-express)
+- **Security:** JWT (jsonwebtoken), Helmet.js, bcryptjs
 - **DevSecOps:** SonarCloud (SAST), Snyk (Dependency Scanning)
+- **Frontend:** Next.js 14, React 18, custom NexMart CSS design system, live search/filter on all data pages, PDF & Excel export (jsPDF + SheetJS)
 
 ---
 
@@ -174,7 +175,7 @@ Our e-commerce application is built using a microservices architecture with four
 
 ### 3.1 Communication Pattern
 
-All services communicate using **synchronous REST API calls** via Spring's WebClient. This ensures real-time validation and immediate feedback.
+All services communicate using **synchronous REST API calls** via the Axios HTTP client. This ensures real-time validation and immediate feedback.
 
 ### 3.2 Communication Examples
 
@@ -182,13 +183,12 @@ All services communicate using **synchronous REST API calls** via Spring's WebCl
 
 **Purpose:** Validate user exists before creating order
 
-```java
-UserResponse user = webClientBuilder.build()
-    .get()
-    .uri(userServiceUrl + "/api/users/" + userId)
-    .retrieve()
-    .bodyToMono(UserResponse.class)
-    .block();
+```javascript
+const response = await axios.get(
+  `${process.env.USER_SERVICE_URL}/api/users/${userId}`,
+  { headers: { Authorization: req.headers.authorization } }
+);
+const user = response.data;
 ```
 
 **Demonstration:** When creating an order, the Order Service first validates the user ID exists in the User Service.
@@ -199,24 +199,20 @@ UserResponse user = webClientBuilder.build()
 
 **Purpose:** Check and reserve stock
 
-```java
+```javascript
 // Check stock availability
-StockCheckResponse stockCheck = webClientBuilder.build()
-    .post()
-    .uri(inventoryServiceUrl + "/api/inventory/check-stock")
-    .bodyValue(request)
-    .retrieve()
-    .bodyToMono(StockCheckResponse.class)
-    .block();
+const stockCheck = await axios.post(
+  `${process.env.INVENTORY_SERVICE_URL}/api/inventory/check-stock`,
+  { productId, quantity },
+  { headers: { Authorization: req.headers.authorization } }
+);
 
 // Reserve stock
-webClientBuilder.build()
-    .post()
-    .uri(inventoryServiceUrl + "/api/inventory/reserve-stock")
-    .bodyValue(request)
-    .retrieve()
-    .bodyToMono(Void.class)
-    .block();
+await axios.post(
+  `${process.env.INVENTORY_SERVICE_URL}/api/inventory/reserve-stock`,
+  { productId, quantity },
+  { headers: { Authorization: req.headers.authorization } }
+);
 ```
 
 **Demonstration:** Order Service checks if products are in stock, then reserves them before payment.
@@ -227,14 +223,12 @@ webClientBuilder.build()
 
 **Purpose:** Process payment
 
-```java
-PaymentResponse payment = webClientBuilder.build()
-    .post()
-    .uri(paymentServiceUrl + "/api/payments/process")
-    .bodyValue(paymentRequest)
-    .retrieve()
-    .bodyToMono(PaymentResponse.class)
-    .block();
+```javascript
+const paymentResponse = await axios.post(
+  `${process.env.PAYMENT_SERVICE_URL}/api/payments/process`,
+  { orderId, amount, userId },
+  { headers: { Authorization: req.headers.authorization } }
+);
 ```
 
 **Demonstration:** After stock reservation, Order Service processes payment through Payment Service.
@@ -303,8 +297,10 @@ Step 7: Order Service → Client
 
 2. **Build Environment Setup**
    ```yaml
-   - name: Set up JDK 17
-     uses: actions/setup-java@v3
+   - name: Set up Node.js 20
+     uses: actions/setup-node@v4
+     with:
+       node-version: '20'
    ```
 
 3. **Security Scanning (DevSecOps)**
@@ -313,8 +309,8 @@ Step 7: Order Service → Client
 
 4. **Build & Test**
    ```yaml
-   - name: Build with Maven
-     run: mvn clean package
+   - name: Install and test
+     run: npm ci && npm test
    ```
 
 5. **Containerization**
@@ -337,27 +333,26 @@ Step 7: Order Service → Client
 **Multi-Stage Dockerfile:**
 
 ```dockerfile
-# Stage 1: Build
-FROM maven:3.8.8-eclipse-temurin-17-alpine AS builder
+# Stage 1: Install dependencies
+FROM node:20-alpine AS deps
 WORKDIR /app
-COPY pom.xml .
-RUN mvn dependency:go-offline -B
-COPY src ./src
-RUN mvn clean package -DskipTests
+COPY package*.json ./
+RUN npm ci --only=production
 
 # Stage 2: Runtime
-FROM eclipse-temurin:17-jre-alpine
+FROM node:20-alpine
 WORKDIR /app
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-COPY --from=builder /app/target/*.jar app.jar
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
 RUN chown -R appuser:appgroup /app
 USER appuser
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+CMD ["node", "src/server.js"]
 ```
 
 **Benefits:**
-- Small image size (JRE only, no build tools)
+- Small image size (Alpine Linux, no dev dependencies)
 - Non-root user for security
 - Cacheable layers for faster builds
 - Health checks included
@@ -402,23 +397,18 @@ services:
 
 **JWT Token-Based Authentication:**
 - Users receive JWT tokens upon successful login
-- Tokens contain user ID and username
+- Tokens contain user ID, username, and role
 - Tokens expire after 24 hours
 - Other services validate tokens via User Service
 
 **Implementation:**
-```java
-@Component
-public class JwtTokenProvider {
-    public String generateToken(String username, Long userId) {
-        return Jwts.builder()
-            .setClaims(claims)
-            .setSubject(username)
-            .setExpiration(expiryDate)
-            .signWith(getSigningKey(), SignatureAlgorithm.HS512)
-            .compact();
-    }
-}
+```javascript
+// Generate JWT (User Service)
+const token = jwt.sign(
+  { userId: user._id, username: user.username, role: user.role },
+  process.env.JWT_SECRET,
+  { expiresIn: '24h' }
+);
 ```
 
 ---
@@ -426,33 +416,36 @@ public class JwtTokenProvider {
 #### 5.1.2 Password Security
 
 **BCrypt Hashing:**
-```java
-@Bean
-public PasswordEncoder passwordEncoder() {
-    return new BCryptPasswordEncoder();
-}
+```javascript
+const bcrypt = require('bcryptjs');
+
+// Hash before saving
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
+});
 ```
 
-All passwords are hashed using BCrypt (strength 10) before storage.
+All passwords are hashed using bcryptjs (strength 10) before storage.
 
 ---
 
 #### 5.1.3 Input Validation
 
-**Bean Validation on all DTOs:**
-```java
-@Data
-public class UserRegistrationRequest {
-    @NotBlank(message = "Username is required")
-    @Size(min = 3, max = 50)
-    private String username;
-    
-    @Email(message = "Email should be valid")
-    private String email;
-    
-    @Size(min = 6, message = "Password must be at least 6 characters")
-    private String password;
-}
+**Express-validator on all routes:**
+```javascript
+const { body, validationResult } = require('express-validator');
+
+router.post('/register', [
+  body('username').isLength({ min: 3, max: 50 }).trim(),
+  body('email').isEmail().normalizeEmail(),
+  body('password').isLength({ min: 6 }),
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+  // ...
+});
 ```
 
 ---
@@ -470,9 +463,13 @@ public class UserRegistrationRequest {
 **Configuration:**
 ```yaml
 - name: SonarCloud Scan
-  run: mvn verify sonar:sonar
-    -Dsonar.projectKey=your-org_service-name
-    -Dsonar.organization=your-org
+  uses: SonarSource/sonarcloud-github-action@master
+  env:
+    SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  with:
+    args: >
+      -Dsonar.projectKey=your-org_service-name
+      -Dsonar.organization=your-org
 ```
 
 ---
@@ -480,14 +477,14 @@ public class UserRegistrationRequest {
 #### 5.2.2 Dependency Vulnerability Scanning
 
 **Snyk Integration:**
-- Scans Maven dependencies for known vulnerabilities
-- Reports CVEs in third-party libraries
+- Scans npm dependencies for known vulnerabilities
+- Reports CVEs in third-party packages
 - Suggests upgrade paths
 
 **Configuration:**
 ```yaml
 - name: Run Snyk
-  uses: snyk/actions/maven@master
+  uses: snyk/actions/node@master
   env:
     SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 ```
@@ -557,10 +554,11 @@ aws ec2 authorize-security-group-ingress \
 - Database credentials managed by cloud provider
 - API keys stored in AWS Secrets Manager / Azure Key Vault
 
-**Environment Variables:**
-```properties
-# application.properties
-jwt.secret=${JWT_SECRET:default-secret-for-dev}
+**Environment Variables (`.env`):**
+```env
+JWT_SECRET=your-secret-key
+MONGODB_URI=mongodb://localhost:27017/user-service
+PORT=8081
 ```
 
 ---
@@ -579,7 +577,7 @@ jwt.secret=${JWT_SECRET:default-secret-for-dev}
 #### Challenge: Network Latency
 **Problem:** Multiple HTTP calls increase response time
 **Solution:**
-- Keep databases lightweight (H2 for demo)
+- Keep services lightweight (MongoDB in-memory indexing)
 - Consider async messaging for non-critical operations
 - Implement circuit breakers (future enhancement)
 
@@ -591,16 +589,17 @@ jwt.secret=${JWT_SECRET:default-secret-for-dev}
 **Problem:** Order creation involves multiple services; if payment fails, need to rollback stock reservation
 
 **Solution: Saga Pattern (Compensating Transactions)**
-```java
+```javascript
 try {
-    reserveStock();
-    processPayment();
-    confirmStock();
-} catch (Exception e) {
-    // Compensate: release reserved stock
-    releaseStock();
-    throw new RuntimeException("Order failed");
+  await reserveStock();
+  await processPayment();
+  await confirmStock();
+} catch (err) {
+  // Compensate: release reserved stock
+  await releaseStock();
+  throw new Error('Order failed: ' + err.message);
 }
+```
 ```
 
 ---
@@ -649,6 +648,11 @@ try {
 
 ### 7.1 Key Achievements
 
+✅ **Frontend Features**
+- Live client-side search and filter on Products, Orders, Users, and Payments pages
+- PDF and Excel report export from the Analytics dashboard
+- Branded NexMart favicon with indigo-purple gradient SVG icon
+
 ✅ **Microservices Architecture**
 - Successfully implemented 4 independently deployable services
 - Clear separation of concerns
@@ -689,13 +693,13 @@ try {
 
 ### 7.3 Future Enhancements
 
-1. **API Gateway:** Implement Spring Cloud Gateway for unified entry point
+1. **API Gateway:** Implement an Express-based gateway service for unified entry point
 2. **Service Mesh:** Use Istio for advanced traffic management
 3. **Message Queue:** Add RabbitMQ/Kafka for asynchronous communication
-4. **Database:** Replace H2 with PostgreSQL/MongoDB for production
+4. **Caching:** Add Redis for performance optimization
 5. **Monitoring:** Implement distributed tracing with Zipkin/Jaeger
-6. **Caching:** Add Redis for performance optimization
-7. **Circuit Breaker:** Implement Resilience4j for fault tolerance
+6. **Circuit Breaker:** Implement opossum for fault tolerance
+7. **Real-Time Updates:** Add WebSocket support for live order tracking notifications
 
 ---
 
@@ -726,6 +730,6 @@ For the 10-minute demonstration:
 
 ---
 
-**Date:** February 2026  
+**Date:** March 2026  
 **Module:** SE4010 - Current Trends in Software Engineering  
 **Institution:** SLIIT - Faculty of Computing

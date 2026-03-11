@@ -9,12 +9,18 @@ function PaymentsPage() {
   const [payments, setPayments] = useState([])
   const [loading, setLoading] = useState(true)
   const [refunding, setRefunding] = useState(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState('ALL')
   const { user } = useAuth()
   const isAdmin = user?.role === 'ADMIN'
 
   useEffect(() => {
+    if (!user) {
+      setLoading(false)
+      return
+    }
     fetchPayments()
-  }, [isAdmin])
+  }, [user?.id, isAdmin])
 
   const fetchPayments = async () => {
     try {
@@ -33,12 +39,13 @@ function PaymentsPage() {
         }
         const paymentResults = await Promise.allSettled(
           orders.map(order =>
-            api.get(`${process.env.NEXT_PUBLIC_API_PAYMENT_SERVICE}/api/payments/order/${order.id}`)
+            api.get(`${process.env.NEXT_PUBLIC_API_PAYMENT_SERVICE}/api/payments/order/${order._id || order.id}`)
           )
         )
         const userPayments = paymentResults
           .filter(r => r.status === 'fulfilled')
           .map(r => r.value.data)
+          .filter(p => p && p._id)
         setPayments(userPayments)
       }
     } catch (error) {
@@ -76,14 +83,45 @@ function PaymentsPage() {
     return <div className="payments-loading">Loading payments...</div>
   }
 
+  const filteredPayments = payments.filter((p) => {
+    const q = searchQuery.toLowerCase()
+    const matchesSearch = (
+      (p._id || p.id)?.toString().toLowerCase().includes(q) ||
+      p.orderId?.toString().toLowerCase().includes(q) ||
+      p.transactionId?.toString().toLowerCase().includes(q)
+    )
+    const matchesStatus = statusFilter === 'ALL' || p.status === statusFilter
+    return matchesSearch && matchesStatus
+  })
+
   return (
     <div>
       <div className="payments-header">
         <h1 className="payments-title">{isAdmin ? 'All Payments' : 'My Payments'}</h1>
       </div>
 
+      <div className="page-search-wrap">
+        <input
+          type="text"
+          className="page-search-input"
+          placeholder="Search by payment ID, order ID, or transaction ID…"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <select
+          className="page-filter-select"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          <option value="ALL">All Statuses</option>
+          {['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', 'REFUNDED'].map(s => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+      </div>
+
       <div className="payments-list">
-        {payments.map((payment) => (
+        {filteredPayments.map((payment) => (
           <div key={payment._id || payment.id} className="payment-card">
             <div className="payment-header">
               <div className="payment-header-info">
@@ -95,7 +133,7 @@ function PaymentsPage() {
                 </div>
                 <div className="payment-details-grid">
                   <p className="payment-detail-item"><span className="payment-detail-label">Order ID:</span> {payment.orderId}</p>
-                  <p className="payment-detail-item"><span className="payment-detail-label">Amount:</span> <span className="payment-amount">${payment.amount?.toFixed(2) || '0.00'}</span></p>
+                  <p className="payment-detail-item"><span className="payment-detail-label">Amount:</span> <span className="payment-amount">Rs. {payment.amount?.toFixed(2) || '0.00'}</span></p>
                   <p className="payment-detail-item"><span className="payment-detail-label">Method:</span> {payment.paymentMethod}</p>
                   <p className="payment-detail-item"><span className="payment-detail-label">Transaction ID:</span> {payment.transactionId || 'N/A'}</p>
                   <p className="payment-detail-item"><span className="payment-detail-label">Created:</span> {new Date(payment.createdAt).toLocaleString()}</p>

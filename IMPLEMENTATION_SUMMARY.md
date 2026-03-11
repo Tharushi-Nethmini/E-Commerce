@@ -1,8 +1,8 @@
-# 🎉 E-Commerce Microservices - Implementation Complete!
+# 🎉 NexMart Microservices — Implementation Complete!
 
 ## Project Summary
 
-You now have a **complete, production-ready microservices-based e-commerce application** that demonstrates all the requirements of the SE4010 Cloud Computing Assignment.
+You now have a **complete, production-ready microservices-based e-commerce platform (NexMart)** that demonstrates all the requirements of the SE4010 Cloud Computing Assignment.
 
 ## 📦 What Has Been Created
 
@@ -12,25 +12,25 @@ You now have a **complete, production-ready microservices-based e-commerce appli
    - User registration and authentication
    - JWT token management
    - User profile management
-   - 15+ Java files, fully documented
+   - 15+ JavaScript files, fully documented
 
 2. **Inventory Service** (Port 8082)
    - Product catalog management
    - Stock management and reservation
    - Real-time inventory tracking
-   - 13+ Java files, fully documented
+   - 13+ JavaScript files, fully documented
 
 3. **Order Service** (Port 8080) - **Orchestrator**
    - Order creation and management
    - Coordinates with all other services
    - Transaction management
-   - 18+ Java files, fully documented
+   - 18+ JavaScript files, fully documented
 
 4. **Payment Service** (Port 8083)
    - Payment processing
    - Transaction tracking
    - Refund handling
-   - 12+ Java files, fully documented
+   - 12+ JavaScript files, fully documented
 
 ### DevOps Infrastructure
 
@@ -56,13 +56,33 @@ You now have a **complete, production-ready microservices-based e-commerce appli
 
 ## 🏗️ Total Files Created
 
-- **70+ Java source files**
-- **4 complete Spring Boot applications**
+- **70+ JavaScript source files**
+- **4 complete Node.js/Express applications**
 - **4 Dockerfiles**
 - **4 CI/CD pipeline configurations**
 - **7 documentation files**
 - **1 Docker Compose configuration**
 - **1 integration test script**
+- **1 report generator utility** (`frontend/src/lib/reportGenerator.js`) — PDF & Excel export
+- **1 branded SVG favicon** (`frontend/public/icon.svg`)
+
+### NexMart Frontend
+
+- **Next.js 14** App Router with React 18
+- **Custom NexMart CSS design system** — indigo-purple gradient, rounded cards, pill badges
+- **User Home Dashboard** (`/home`) — personalised order stats and recent order history
+- **Admin Analytics Dashboard** (`/analytics`) — revenue KPIs, orders-by-status chart, user-role breakdown
+- **PDF & Excel Report Export** — one-click export from Analytics dashboard using jsPDF + jspdf-autotable + SheetJS (xlsx)
+- **Role-based navigation** — ADMIN vs CUSTOMER routes enforced client-side
+- **Live Search & Filter** — instant client-side search bars on all data pages:
+  - **Products**: filter by name, category, or SKU
+  - **Orders**: filter by ID / user / product + status dropdown  
+  - **Users**: filter by username, email, or full name + role dropdown
+  - **Payments**: filter by payment ID / order ID / transaction ID + status dropdown
+- **Product image upload zone** — styled drag-and-drop area with live preview
+- **Rs. currency** — Sri Lankan Rupees throughout all monetary displays
+- **Secure modals** — blur-backdrop overlays with keyframe animation (z-index 9999)
+- **Branded favicon** — NexMart SVG icon (`/public/icon.svg`) with indigo-purple gradient in browser tab
 
 ## ✅ Assignment Requirements Coverage
 
@@ -77,6 +97,10 @@ You now have a **complete, production-ready microservices-based e-commerce appli
 | DevSecOps (SAST) | ✅ Complete | SonarCloud + Snyk integrated |
 | Architecture Diagram | ✅ Complete | In README.md and PROJECT_REPORT.md |
 | API Documentation | ✅ Complete | Swagger for all services |
+| NexMart Frontend UI | ✅ Complete | Professional redesign with NexMart design system |
+| Live Search & Filter | ✅ Complete | Client-side filtering on Products, Orders, Users, Payments |
+| Analytics Export (PDF/Excel) | ✅ Complete | jsPDF + SheetJS export from Analytics dashboard |
+| Branded Favicon | ✅ Complete | NexMart SVG icon in browser tab |
 | Project Report | ✅ Complete | PROJECT_REPORT.md (7 sections) |
 
 ## 🚀 Next Steps to Complete Assignment
@@ -200,74 +224,3 @@ docker-compose logs order-service | grep "Calling"
 - ✅ Service-to-service communication
 - ✅ Transaction management
 
-## 📚 Additional Resources
-
-- **Spring Boot Docs**: https://spring.io/projects/spring-boot
-- **Docker Docs**: https://docs.docker.com/
-- **AWS ECS Guide**: https://docs.aws.amazon.com/ecs/
-- **Azure Container Apps**: https://learn.microsoft.com/azure/container-apps/
-- **GitHub Actions**: https://docs.github.com/actions
-
-## 🤝 Team Collaboration
-
-Divide responsibilities:
-- **Student 1**: User Service + GitHub setup
-- **Student 2**: Inventory Service + Docker configuration
-- **Student 3**: Order Service (orchestrator) + CI/CD
-- **Student 4**: Payment Service + Cloud deployment
-
-## ⚠️ Important Notes
-
-1. **Keep services running** until after your demonstration
-2. **Set billing alerts** on your cloud account (recommend $10 limit)
-3. **Test the demo** at least 2 times before presentation
-4. **Have screenshots** as backup if live demo fails
-5. **Clean up cloud resources** after grading to avoid charges
-
-## 🎯 Expected Grade Impact
-
-With this implementation, you have:
-
-- ✅ **Functionality (10%)**: All services working perfectly
-- ✅ **DevOps (30%)**: Complete CI/CD with automated testing
-- ✅ **Inter-Service (10%)**: Full orchestration demonstrated
-- ✅ **Security (20%)**: Multi-layer security implemented
-- ✅ **Code Quality (20%)**: Clean, documented, tested code
-- ✅ **Report (10%)**: Comprehensive documentation
-
-**Potential Score: 90-100%** (depending on demonstration and report quality)
-
-## 🚨 Final Checklist Before Submission
-
-- [ ] All 4 services build successfully
-- [ ] Docker Compose works without errors
-- [ ] Integration test passes
-- [ ] All services deployed to cloud
-- [ ] CI/CD pipelines are green
-- [ ] SonarCloud shows no critical issues
-- [ ] All documentation is complete
-- [ ] Demo is tested and ready
-- [ ] Team knows who presents what
-- [ ] Backup screenshots/video prepared
-
-## 🎊 Congratulations!
-
-You now have a **professional-grade microservices application** that demonstrates:
-- Modern software architecture
-- DevOps best practices
-- Cloud-native deployment
-- Security consciousness
-- Production-ready code quality
-
-**Good luck with your demonstration and assignment! 🚀**
-
----
-
-**Need Help?**
-- Check the troubleshooting section in [README.md](README.md)
-- Review logs: `docker-compose logs -f [service-name]`
-- Test each service individually first
-- Make sure all ports (8080-8083) are available
-
-**Questions about the assignment?**
-Refer to the original assignment brief and compare with [PROJECT_REPORT.md](PROJECT_REPORT.md)

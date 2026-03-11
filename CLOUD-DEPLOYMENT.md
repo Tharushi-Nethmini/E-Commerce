@@ -1,8 +1,8 @@
-# Cloud Deployment Guide
+# Cloud Deployment Guide — NexMart
 
 ## Overview
 
-This guide covers deploying your E-Commerce microservices to AWS ECS, Azure Container Apps, and Google Cloud Run.
+This guide covers deploying the NexMart microservices platform to AWS ECS, Azure Container Apps, and Google Cloud Run.
 
 ## Prerequisites
 
@@ -58,7 +58,7 @@ docker push YOUR_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/user-service:latest
 
 ```bash
 # Create cluster
-aws ecs create-cluster --cluster-name ecommerce-cluster --region us-east-1
+aws ecs create-cluster --cluster-name nexmart-cluster --region us-east-1
 ```
 
 ### Step 5: Create Task Definitions
@@ -120,7 +120,7 @@ aws ecs register-task-definition --cli-input-json file://user-service-task-def.j
 ```bash
 # Create service
 aws ecs create-service \
-  --cluster ecommerce-cluster \
+  --cluster nexmart-cluster \
   --service-name user-service \
   --task-definition user-service \
   --desired-count 1 \
@@ -160,25 +160,25 @@ az login
 ### Step 2: Create Resource Group
 
 ```bash
-az group create --name ecommerce-rg --location eastus
+az group create --name nexmart-rg --location eastus
 ```
 
 ### Step 3: Create Container Registry
 
 ```bash
 # Create ACR
-az acr create --resource-group ecommerce-rg --name ecommerceacr --sku Basic
+az acr create --resource-group nexmart-rg --name nexmartacr --sku Basic
 
 # Login to ACR
-az acr login --name ecommerceacr
+az acr login --name nexmartacr
 ```
 
 ### Step 4: Push Images to ACR
 
 ```bash
 # Tag and push
-docker tag user-service:latest ecommerceacr.azurecr.io/user-service:latest
-docker push ecommerceacr.azurecr.io/user-service:latest
+docker tag user-service:latest nexmartacr.azurecr.io/user-service:latest
+docker push nexmartacr.azurecr.io/user-service:latest
 
 # Repeat for all services
 ```
@@ -187,8 +187,8 @@ docker push ecommerceacr.azurecr.io/user-service:latest
 
 ```bash
 az containerapp env create \
-  --name ecommerce-env \
-  --resource-group ecommerce-rg \
+  --name nexmart-env \
+  --resource-group nexmart-rg \
   --location eastus
 ```
 
@@ -198,12 +198,12 @@ az containerapp env create \
 # User Service
 az containerapp create \
   --name user-service \
-  --resource-group ecommerce-rg \
-  --environment ecommerce-env \
-  --image ecommerceacr.azurecr.io/user-service:latest \
+  --resource-group nexmart-rg \
+  --environment nexmart-env \
+  --image nexmartacr.azurecr.io/user-service:latest \
   --target-port 8081 \
   --ingress external \
-  --registry-server ecommerceacr.azurecr.io \
+  --registry-server nexmartacr.azurecr.io \
   --env-vars \
     NODE_ENV=production \
     MONGODB_URI="YOUR_MONGODB_URI" \
@@ -217,15 +217,15 @@ az containerapp create \
 ```bash
 # Create Cosmos DB account
 az cosmosdb create \
-  --name ecommerce-cosmos \
-  --resource-group ecommerce-rg \
+  --name nexmart-cosmos \
+  --resource-group nexmart-rg \
   --kind MongoDB \
   --server-version 4.2
 
 # Get connection string
 az cosmosdb keys list \
-  --name ecommerce-cosmos \
-  --resource-group ecommerce-rg \
+  --name nexmart-cosmos \
+  --resource-group nexmart-rg \
   --type connection-strings
 ```
 
@@ -309,7 +309,7 @@ mongodb+srv://username:password@cluster.mongodb.net/database?retryWrites=true&w=
 
 ```bash
 aws docdb create-db-cluster \
-  --db-cluster-identifier ecommerce-docdb \
+  --db-cluster-identifier nexmart-docdb \
   --engine docdb \
   --master-username admin \
   --master-user-password YourPassword123
@@ -335,9 +335,9 @@ aws logs create-log-group --log-group-name /ecs/user-service
 ```bash
 # Create Application Insights
 az monitor app-insights component create \
-  --app ecommerce-insights \
+  --app nexmart-insights \
   --location eastus \
-  --resource-group ecommerce-rg
+  --resource-group nexmart-rg
 ```
 
 ### Google Cloud Logging

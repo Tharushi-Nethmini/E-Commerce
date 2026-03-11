@@ -106,6 +106,21 @@ class ServiceClient {
       return { exists: false };
     }
   }
+
+  async refundPayment(orderId) {
+    try {
+      // First find the payment by orderId
+      const paymentResponse = await axios.get(`${PAYMENT_SERVICE_URL}/api/payments/order/${orderId}`);
+      const payment = paymentResponse.data;
+      if (!payment || !payment._id) return { success: false };
+      // Then refund it
+      const refundResponse = await axios.post(`${PAYMENT_SERVICE_URL}/api/payments/${payment._id}/refund`);
+      return { success: true, ...refundResponse.data };
+    } catch (error) {
+      console.error('Error refunding payment:', error.message);
+      return { success: false };
+    }
+  }
 }
 
 module.exports = new ServiceClient();

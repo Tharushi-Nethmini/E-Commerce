@@ -67,6 +67,16 @@ class OrderController {
       res.status(400).json({ message: error.message });
     }
   }
+
+  // Order statistics
+  async getOrderStats(req, res) {
+    try {
+      const stats = await orderService.getOrderStats();
+      res.status(200).json(stats);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  }
 }
 
 module.exports = new OrderController();

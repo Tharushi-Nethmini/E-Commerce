@@ -83,8 +83,14 @@ export const AuthProvider = ({ children }) => {
     router.push('/login')
   }
 
+  const updateUser = (updatedData) => {
+    const merged = { ...user, ...updatedData }
+    setUser(merged)
+    Cookies.set('user', JSON.stringify(merged), { expires: 7 })
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   )

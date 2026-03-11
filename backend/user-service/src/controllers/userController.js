@@ -93,6 +93,16 @@ class UserController {
       res.status(400).json({ message: error.message });
     }
   }
+
+  // User statistics
+  async getUserStats(req, res) {
+    try {
+      const stats = await userService.getUserStats();
+      res.status(200).json(stats);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  }
 }
 
 module.exports = new UserController();

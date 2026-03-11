@@ -1,4 +1,4 @@
-# Testing the Reorganized Project
+# Testing Guide — NexMart Platform
 
 ## ✅ Quick Verification
 
@@ -116,7 +116,8 @@ http://localhost:3000
 
 #### Login
 1. Use credentials from registration
-2. Should redirect to products page
+2. **ADMIN** users are redirected to the Analytics dashboard (`/analytics`)
+3. **CUSTOMER** users are redirected to the Home dashboard (`/home`)
 
 #### Create Product (Admin Only)
 1. Register another user with role ADMIN
@@ -131,6 +132,37 @@ http://localhost:3000
 2. Go to Orders
 3. Create new order with product ID
 4. Check payment status
+
+#### Test Search & Filter (All Roles)
+
+**Products page:**
+1. Go to the Products page
+2. Type a product name (or partial name) in the search bar — list filters instantly
+3. Type a category name — only matching products appear
+4. Type a SKU (e.g. `PROD-001`) — exact match is shown
+
+**Orders page:**
+1. Go to the Orders page
+2. Type part of an order ID in the search bar — matching orders appear
+3. Use the **Status** dropdown to filter by `PENDING`, `DELIVERED`, etc.
+4. Combine both: type a user ID and select a status — filters stack
+
+**Users page (Admin only):**
+1. Go to the Users page
+2. Type a username or email — matching users appear
+3. Use the **Role** dropdown to show only `ADMIN` or `CUSTOMER` users
+
+**Payments page:**
+1. Go to the Payments page
+2. Type a transaction ID or order ID — matching payments appear
+3. Use the **Status** dropdown to filter by `COMPLETED`, `FAILED`, etc.
+
+#### Test Analytics Export (Admin Only)
+1. Login as ADMIN
+2. Go to Analytics (`/analytics`)
+3. Click **Export PDF** — a PDF report should download automatically
+4. Click **Export Excel** — an `.xlsx` file should download automatically
+5. Open both files and verify all KPI sections are present
 
 ## 🧪 Local Development Testing
 
@@ -205,7 +237,7 @@ Write-Host "Token: $token"
 $productBody = @{
     name = "Test Product"
     description = "Test Description"
-    price = 99.99
+    price = 1299.99
     quantity = 100
     sku = "TEST-001"
 } | ConvertTo-Json

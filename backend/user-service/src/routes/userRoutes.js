@@ -121,6 +121,20 @@ router.post('/validate/user', userController.getUserFromToken);
 
 /**
  * @swagger
+ * /api/users/stats:
+ *   get:
+ *     summary: Get user statistics (admin)
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User statistics
+ */
+router.get('/stats', authenticateToken, userController.getUserStats);
+
+/**
+ * @swagger
  * /api/users/{id}:
  *   get:
  *     summary: Get user by ID

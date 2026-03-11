@@ -15,7 +15,7 @@ export default function Login() {
 
   useEffect(() => {
     if (user) {
-      router.push('/products')
+      router.push(user.role === 'ADMIN' ? '/analytics' : '/home')
     }
   }, [user, router])
 
@@ -26,19 +26,24 @@ export default function Login() {
 
     const result = await login(username, password)
     
-    if (result.success) {
-      router.push('/products')
-    } else {
+    if (!result.success) {
       setError(result.error)
       setLoading(false)
     }
+    // On success, the useEffect above handles redirect based on user.role
   }
 
   return (
     <div className="login-container">
+      <div className="login-brand">
+        <div className="login-brand-logo">N</div>
+        <h2 className="login-brand-name">NexMart</h2>
+        <p className="login-brand-tagline">Your modern shopping destination</p>
+      </div>
       <div className="login-card">
-        <h1 className="login-title">Login</h1>
-        
+        <h1 className="login-title">Welcome back</h1>
+        <p className="login-subtitle">Sign in to your account</p>
+
         {error && (
           <div className="login-error">
             {error}
@@ -52,6 +57,7 @@ export default function Login() {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              placeholder="Enter your username"
               required
               disabled={loading}
             />
@@ -63,6 +69,7 @@ export default function Login() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
               required
               disabled={loading}
             />
@@ -73,14 +80,14 @@ export default function Login() {
             className="login-submit-btn"
             disabled={loading}
           >
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 
         <p className="login-footer">
           Don't have an account?{' '}
           <Link href="/register">
-            Register here
+            Create one
           </Link>
         </p>
       </div>

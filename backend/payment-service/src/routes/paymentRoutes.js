@@ -52,23 +52,15 @@ router.post('/process', validatePayment, paymentController.processPayment);
 
 /**
  * @swagger
- * /api/payments/{id}:
+ * /api/payments:
  *   get:
- *     summary: Get payment by ID
+ *     summary: Get all payments
  *     tags: [Payments]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
  *     responses:
  *       200:
- *         description: Payment details
- *       404:
- *         description: Payment not found
+ *         description: List of all payments
  */
-router.get('/:id', paymentController.getPaymentById);
+router.get('/', paymentController.getAllPayments);
 
 /**
  * @swagger
@@ -92,15 +84,23 @@ router.get('/order/:orderId', paymentController.getPaymentByOrderId);
 
 /**
  * @swagger
- * /api/payments:
+ * /api/payments/{id}:
  *   get:
- *     summary: Get all payments
+ *     summary: Get payment by ID
  *     tags: [Payments]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
- *         description: List of all payments
+ *         description: Payment details
+ *       404:
+ *         description: Payment not found
  */
-router.get('/', paymentController.getAllPayments);
+router.get('/:id', paymentController.getPaymentById);
 
 /**
  * @swagger

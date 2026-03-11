@@ -21,6 +21,8 @@ function OrdersPage() {
     quantity: 1,
     paymentMethod: 'CREDIT_CARD'
   })
+  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState('ALL')
 
   useEffect(() => {
     fetchOrders()
@@ -124,6 +126,17 @@ function OrdersPage() {
     return <div className="orders-loading">Loading orders...</div>
   }
 
+  const filteredOrders = orders.filter((o) => {
+    const q = searchQuery.toLowerCase()
+    const matchesSearch = (
+      (o._id || o.id)?.toString().toLowerCase().includes(q) ||
+      o.userId?.toString().toLowerCase().includes(q) ||
+      o.productId?.toString().toLowerCase().includes(q)
+    )
+    const matchesStatus = statusFilter === 'ALL' || o.status === statusFilter
+    return matchesSearch && matchesStatus
+  })
+
   return (
     <div>
       <div className="orders-header">
@@ -135,8 +148,26 @@ function OrdersPage() {
         )}
       </div>
 
+      <div className="page-search-wrap">
+        <input
+          type="text"
+          className="page-search-input"
+          placeholder="Search by order ID, user ID, or product ID…"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <select
+          className="page-filter-select"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          <option value="ALL">All Statuses</option>
+          {ORDER_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+      </div>
+
       <div className="orders-list">
-        {orders.map((order) => (
+        {filteredOrders.map((order) => (
           <div key={order._id || order.id} className="order-card">
             <div className="order-header">
               <div className="order-header-info">
@@ -155,7 +186,7 @@ function OrdersPage() {
                     {isAdmin ? order.productId : getProductName(order.productId) || order.productId}
                   </p>
                   <p className="order-detail-item"><span className="order-detail-label">Quantity:</span> {order.quantity}</p>
-                  <p className="order-detail-item"><span className="order-detail-label">Total Amount:</span> <strong>${order.totalAmount?.toFixed(2) || '0.00'}</strong></p>
+                  <p className="order-detail-item"><span className="order-detail-label">Total Amount:</span> <strong>Rs. {order.totalAmount?.toFixed(2) || '0.00'}</strong></p>
                   <p className="order-detail-item"><span className="order-detail-label">Payment:</span> {order.paymentMethod}</p>
                   <p className="order-detail-item"><span className="order-detail-label">Created:</span> {new Date(order.createdAt).toLocaleString()}</p>
                   {order.updatedAt && (

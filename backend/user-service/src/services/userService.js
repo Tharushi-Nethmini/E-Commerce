@@ -148,6 +148,29 @@ class UserService {
     }
   }
 
+  // User statistics for analytics dashboard
+  async getUserStats() {
+    try {
+      const totalUsers = await User.countDocuments();
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const newToday = await User.countDocuments({ createdAt: { $gte: today } });
+
+      const byRoleResult = await User.aggregate([
+        { $group: { _id: '$role', count: { $sum: 1 } } }
+      ]);
+      const byRole = byRoleResult.reduce((acc, r) => {
+        acc[r._id] = r.count;
+        return acc;
+      }, {});
+
+      return { totalUsers, newToday, byRole };
+    } catch (error) {
+      throw error;
+    }
+  }
+
   // Generate JWT token
   generateToken(user) {
     return jwt.sign(

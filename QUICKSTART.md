@@ -1,4 +1,4 @@
-# Quick Start Guide - Node.js/Express E-Commerce
+# NexMart — Quick Start Guide
 
 ## Prerequisites
 
@@ -15,12 +15,12 @@
 cd E-Commerce
 
 # Start all services with Docker Compose
-docker-compose -f docker-compose-node.yml up -d --build
+docker-compose up -d --build
 
 # Wait for services to start (about 30-60 seconds)
 
 # Check status
-docker-compose -f docker-compose-node.yml ps
+docker-compose ps
 ```
 
 ### Access Services
@@ -35,16 +35,16 @@ docker-compose -f docker-compose-node.yml ps
 
 ```bash
 # All services
-docker-compose -f docker-compose-node.yml logs -f
+docker-compose logs -f
 
 # Specific service
-docker-compose -f docker-compose-node.yml logs -f user-service
+docker-compose logs -f user-service
 ```
 
 ### Stop Everything
 
 ```bash
-docker-compose -f docker-compose-node.yml down
+docker-compose down
 ```
 
 ## Option 2: Local Development
@@ -134,12 +134,16 @@ Fill in:
 - Password
 - Select Role (Customer/Admin/Vendor)
 
+> **Role routing:** After login, **ADMIN** users are directed to the Analytics dashboard (`/analytics`). **CUSTOMER** users land on the personalised Home dashboard (`/home`) showing order stats and recent activity.
+
 ### 2. Create Products (Admin/Vendor)
 
 1. Login with your credentials
 2. Go to "Products" page
 3. Click "Add Product"
 4. Fill in product details
+
+> **Search tip:** Use the search bar above the product grid to filter by name, category, or SKU.
 
 ### 3. Create an Order
 
@@ -148,6 +152,15 @@ Fill in:
 3. Click "Create Order"
 4. Select product, quantity, payment method
 5. Submit order
+
+> **Search tip:** Use the search bar and status dropdown on the Orders page to quickly find specific orders.
+
+### 4. Export Analytics (Admin)
+
+1. Login as ADMIN
+2. Go to Analytics dashboard (`/analytics`)
+3. Click **Export PDF** to download a full report as a PDF file
+4. Click **Export Excel** to download all analytics data as a spreadsheet
 
 ## Troubleshooting
 
@@ -195,10 +208,10 @@ npm run dev
 
 ```bash
 # Remove all containers
-docker-compose -f docker-compose-node.yml down -v
+docker-compose down -v
 
 # Rebuild everything
-docker-compose -f docker-compose-node.yml up -d --build
+docker-compose up -d --build
 
 # View specific service logs
 docker logs -f <service-name>

@@ -1,7 +1,7 @@
-# E-Commerce Microservices Application
+# NexMart — Microservices E-Commerce Platform
 ## Next.js + Node.js/Express Implementation
 
-A complete microservices-based e-commerce application demonstrating DevOps practices and cloud capabilities for SLIIT SE4010 assignment.
+NexMart is a complete microservices-based e-commerce platform demonstrating DevOps practices and cloud capabilities for SLIIT SE4010 assignment.
 
 ## 🏗️ Architecture Overview
 
@@ -70,7 +70,7 @@ Next.js Client → Order Service → User Service (validate user)
 ### Frontend
 - **Next.js 14** with App Router
 - **React 18** for UI
-- **Tailwind CSS** for styling
+- **Custom CSS** with NexMart design system (indigo-purple gradient theme)
 - **Axios** for HTTP requests
 - **JWT cookies** for authentication
 
@@ -105,16 +105,16 @@ git clone <your-repo-url>
 cd E-Commerce
 
 # Start all services
-docker-compose -f docker-compose-node.yml up -d --build
+docker-compose up -d --build
 
 # Check service status
-docker-compose -f docker-compose-node.yml ps
+docker-compose ps
 
 # View logs
-docker-compose -f docker-compose-node.yml logs -f
+docker-compose logs -f
 
 # Stop all services
-docker-compose -f docker-compose-node.yml down
+docker-compose down
 ```
 
 Access the application:
@@ -244,6 +244,23 @@ Each service has Swagger documentation available:
 - `POST /api/orders` - Create order
 - `GET /api/orders` - List orders
 - `POST /api/orders/:id/cancel` - Cancel order
+
+## 🎨 NexMart Frontend Features
+
+- **User Home Dashboard** — Personalised stats (orders, spending, active orders) at `/home`
+- **Admin Analytics** — Revenue KPIs, orders-by-status chart, user-role breakdown at `/analytics`
+- **Analytics Export** — Export full reports as PDF (jsPDF) or Excel (SheetJS) directly from the Analytics dashboard
+- **Role-Based Navigation** — ADMIN sees Analytics, Users, Products; CUSTOMER sees Home, Products, Orders, Payments, Cart
+- **Live Search & Filter** — Instant client-side search bars on all data pages:
+  - **Products**: search by name, category, or SKU
+  - **Orders**: search by order ID / user ID / product ID + status dropdown filter
+  - **Users**: search by username, email, or full name + role dropdown filter
+  - **Payments**: search by payment ID / order ID / transaction ID + status dropdown filter
+- **Professional NexMart UI** — Indigo-purple gradient design system, rounded cards, pill badges across all pages
+- **Product Image Upload** — Drag-and-drop styled upload zone with live preview
+- **Rs. Currency** — All monetary values displayed in Sri Lankan Rupees
+- **Secure Modals** — Blur-backdrop overlays with animation on Products, Orders and Users pages
+- **Branded Favicon** — NexMart SVG icon (indigo-purple gradient) displayed in the browser tab
 
 ## 🔐 Security Features
 
@@ -406,6 +423,9 @@ jobs:
 - ✅ **Security**: JWT, Helmet, bcrypt, input validation
 - ✅ **Cloud Deployment Ready**: ECS/Azure Container Apps compatible
 - ✅ **DevOps Practices**: Multi-stage builds, health checks, logging
+- ✅ **Live Search & Filter**: Client-side search on Products, Orders, Users, and Payments pages
+- ✅ **Analytics Export**: PDF and Excel report export from Analytics dashboard
+- ✅ **Branded Favicon**: NexMart SVG icon in browser tab
 
 ## 🔗 Service Communication Example
 

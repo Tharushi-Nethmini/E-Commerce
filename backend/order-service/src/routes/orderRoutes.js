@@ -56,6 +56,18 @@ router.post('/', validateOrder, orderController.createOrder);
 
 /**
  * @swagger
+ * /api/orders/stats:
+ *   get:
+ *     summary: Get order statistics (admin)
+ *     tags: [Orders]
+ *     responses:
+ *       200:
+ *         description: Order statistics
+ */
+router.get('/stats', orderController.getOrderStats);
+
+/**
+ * @swagger
  * /api/orders/{id}:
  *   get:
  *     summary: Get order by ID

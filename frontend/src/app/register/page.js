@@ -21,7 +21,7 @@ export default function Register() {
 
   useEffect(() => {
     if (user) {
-      router.push('/products')
+      router.push(user.role === 'ADMIN' ? '/analytics' : '/home')
     }
   }, [user, router])
 
@@ -42,19 +42,24 @@ export default function Register() {
     const { confirmPassword, ...registrationData } = formData
     const result = await register(registrationData)
     
-    if (result.success) {
-      router.push('/products')
-    } else {
+    if (!result.success) {
       setError(result.error)
       setLoading(false)
     }
+    // On success, useEffect handles redirect
   }
 
   return (
     <div className="register-container">
+      <div className="register-brand">
+        <div className="register-brand-logo">N</div>
+        <h2 className="register-brand-name">NexMart</h2>
+        <p className="register-brand-tagline">Create your account today</p>
+      </div>
       <div className="register-card">
-        <h1 className="register-title">Register</h1>
-        
+        <h1 className="register-title">Create Account</h1>
+        <p className="register-subtitle">Join NexMart and start shopping</p>
+
         {error && (
           <div className="register-error">
             {error}
@@ -69,6 +74,7 @@ export default function Register() {
               name="fullName"
               value={formData.fullName}
               onChange={handleChange}
+              placeholder="Your full name"
               required
               disabled={loading}
             />
@@ -141,14 +147,14 @@ export default function Register() {
             className="register-submit-btn"
             disabled={loading}
           >
-            {loading ? 'Registering...' : 'Register'}
+            {loading ? 'Creating account...' : 'Create Account'}
           </button>
         </form>
 
         <p className="register-footer">
           Already have an account?{' '}
           <Link href="/login">
-            Login here
+            Sign in
           </Link>
         </p>
       </div>

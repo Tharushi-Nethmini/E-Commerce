@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { useAuth } from '@/context/AuthContext'
 import api from '@/lib/api'
-import { FaPlus, FaEdit, FaTrash, FaImage } from 'react-icons/fa'
+import { FaPlus, FaEdit, FaTrash, FaImage, FaShoppingCart } from 'react-icons/fa'
 import '@/styles/products.css'
 
 function ProductsPage() {
@@ -16,6 +16,7 @@ function ProductsPage() {
   const [imageFile, setImageFile] = useState(null)
   const [imagePreview, setImagePreview] = useState(null)
   const [uploadingImage, setUploadingImage] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -151,9 +152,32 @@ function ProductsPage() {
     }
   }
 
+  const handleAddToCart = async (product) => {
+    try {
+      const userId = user?._id || user?.id
+      await api.post(`${process.env.NEXT_PUBLIC_API_ORDER_SERVICE}/api/cart/add`, {
+        userId,
+        productId: product.id || product._id,
+        quantity: 1
+      })
+      alert(`"${product.name}" added to cart!`)
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to add to cart')
+    }
+  }
+
   if (loading) {
     return <div className="products-loading">Loading products...</div>
   }
+
+  const filteredProducts = products.filter((p) => {
+    const q = searchQuery.toLowerCase()
+    return (
+      p.name?.toLowerCase().includes(q) ||
+      p.category?.toLowerCase().includes(q) ||
+      p.sku?.toLowerCase().includes(q)
+    )
+  })
 
   return (
     <div>
@@ -181,8 +205,18 @@ function ProductsPage() {
         )}
       </div>
 
+      <div className="page-search-wrap">
+        <input
+          type="text"
+          className="page-search-input"
+          placeholder="Search by name, category, or SKU…"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
+
       <div className="products-grid">
-        {products.map((product) => (
+        {filteredProducts.map((product) => (
           <div key={product.id} className="product-card">
             {product.imageUrl && (
               <div className="product-image-container">
@@ -204,12 +238,26 @@ function ProductsPage() {
               <h3 className="product-name">{product.name}</h3>
               <p className="product-description">{product.description}</p>
               <div className="product-details">
-                <p><span className="product-detail-label">Price:</span> ${product.price}</p>
-                <p><span className="product-detail-label">Stock:</span> {product.quantity}</p>
-                <p><span className="product-detail-label">Category:</span> {product.category}</p>
-                <p><span className="product-detail-label">SKU:</span> {product.sku}</p>
+                <p>
+                  <span className="product-detail-label">Price</span>
+                  <span className="product-detail-value price">Rs. {product.price?.toLocaleString()}</span>
+                </p>
+                <p>
+                  <span className="product-detail-label">Stock</span>
+                  <span className={`product-detail-value ${product.quantity <= 10 ? 'low-stock' : ''}`}>
+                    {product.quantity} units
+                  </span>
+                </p>
+                <p>
+                  <span className="product-detail-label">Category</span>
+                  <span className="product-detail-value">{product.category}</span>
+                </p>
+                <p>
+                  <span className="product-detail-label">SKU</span>
+                  <span className="product-detail-value sku">{product.sku}</span>
+                </p>
               </div>
-              {isAdmin && (
+              {isAdmin ? (
                 <div className="product-actions">
                   <button
                     onClick={() => handleEdit(product)}
@@ -225,6 +273,22 @@ function ProductsPage() {
                     <FaTrash />
                     Delete
                   </button>
+                </div>
+              ) : (
+                <div className="product-actions">
+                  {product.available && product.quantity > 10 ? (
+                    <button
+                      onClick={() => handleAddToCart(product)}
+                      className="product-cart-btn"
+                    >
+                      <FaShoppingCart />
+                      Add to Cart
+                    </button>
+                  ) : (
+                    <span className="product-stock-badge">
+                      {product.quantity <= 0 ? 'Out of Stock' : 'Low Stock'}
+                    </span>
+                  )}
                 </div>
               )}
             </div>
@@ -308,20 +372,26 @@ function ProductsPage() {
               </div>
               <div className="product-form-group">
                 <label>Product Image</label>
-                {imagePreview && (
-                  <img 
-                    src={imagePreview} 
-                    alt="Preview"
-                    className="product-image-preview"
+                <div className="product-image-zone">
+                  {imagePreview ? (
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="product-image-preview"
+                    />
+                  ) : (
+                    <div className="product-image-zone-placeholder">
+                      <span>🖼</span>
+                      <span className="product-image-zone-label">Click to upload image</span>
+                      <span className="product-image-zone-sub">JPG, PNG, GIF — max 5MB</span>
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
                   />
-                )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="product-image-input"
-                />
-                <p className="product-image-hint">Max size: 5MB. Formats: JPG, PNG, GIF</p>
+                </div>
               </div>
               <div className="product-modal-actions">
                 <button type="submit" className="product-modal-submit" disabled={uploadingImage}>

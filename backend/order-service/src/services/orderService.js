@@ -159,13 +159,19 @@ class OrderService {
         await serviceClient.releaseStock(order.productId, order.quantity);
       }
 
+      // Auto-refund the payment if it exists and is COMPLETED
+      const refundResult = await serviceClient.refundPayment(order._id.toString());
+      if (refundResult.success) {
+        console.log(`💰 Payment refunded for order ${order._id}`);
+      }
+
       order.status = 'CANCELLED';
       order.updatedAt = new Date();
       await order.save();
 
       return {
         success: true,
-        message: 'Order cancelled successfully',
+        message: 'Order cancelled and payment refunded successfully',
         order: order.toJSON()
       };
     } catch (error) {
@@ -181,6 +187,37 @@ class OrderService {
         throw new Error('Order not found');
       }
       await Order.findByIdAndDelete(orderId);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Order statistics for analytics dashboard
+  async getOrderStats() {
+    try {
+      const totalOrders = await Order.countDocuments();
+
+      const revenueResult = await Order.aggregate([
+        { $match: { status: { $in: ['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED'] } } },
+        { $group: { _id: null, total: { $sum: '$totalAmount' } } }
+      ]);
+      const totalRevenue = revenueResult[0]?.total || 0;
+
+      const byStatusResult = await Order.aggregate([
+        { $group: { _id: '$status', count: { $sum: 1 } } }
+      ]);
+      const byStatus = byStatusResult.reduce((acc, s) => {
+        acc[s._id] = s.count;
+        return acc;
+      }, {});
+
+      const recentOrders = await Order.find().sort({ createdAt: -1 }).limit(5);
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const ordersToday = await Order.countDocuments({ createdAt: { $gte: today } });
+
+      return { totalOrders, totalRevenue, byStatus, recentOrders, ordersToday };
     } catch (error) {
       throw error;
     }

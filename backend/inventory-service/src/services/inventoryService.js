@@ -49,6 +49,18 @@ class InventoryService {
     }
   }
 
+  // Get low stock products (for analytics)
+  async getLowStockProducts(threshold = 10) {
+    try {
+      return await Product.find({
+        quantity: { $lte: threshold },
+        available: true
+      }).sort({ quantity: 1 });
+    } catch (error) {
+      throw error;
+    }
+  }
+
   // Update product
   async updateProduct(productId, updateData) {
     try {

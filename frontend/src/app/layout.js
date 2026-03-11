@@ -6,8 +6,13 @@ import Navbar from '@/components/Navbar'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
-  title: 'E-Commerce Microservices',
-  description: 'Microservices-based e-commerce application for SLIIT SE4010',
+  title: 'NexMart',
+  description: 'NexMart — Modern microservices-based e-commerce platform',
+  icons: {
+    icon: '/icon.svg',
+    shortcut: '/icon.svg',
+    apple: '/icon.svg',
+  },
 }
 
 export default function RootLayout({ children }) {

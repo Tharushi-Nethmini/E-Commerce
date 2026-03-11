@@ -1,4 +1,4 @@
-# CI/CD Setup Guide
+# NexMart \u2014 CI/CD Setup Guide
 
 ## Prerequisites
 

@@ -68,6 +68,36 @@ router.post('/products', authenticateToken, authorizeRoles('ADMIN'), validatePro
 
 /**
  * @swagger
+ * /api/inventory/products:
+ *   get:
+ *     summary: Get all products
+ *     tags: [Products]
+ *     responses:
+ *       200:
+ *         description: List of all products
+ */
+router.get('/products', inventoryController.getAllProducts);
+
+/**
+ * @swagger
+ * /api/inventory/products/low-stock:
+ *   get:
+ *     summary: Get low stock products
+ *     tags: [Products]
+ *     parameters:
+ *       - in: query
+ *         name: threshold
+ *         schema:
+ *           type: integer
+ *         description: Stock threshold (default 10)
+ *     responses:
+ *       200:
+ *         description: List of low stock products
+ */
+router.get('/products/low-stock', inventoryController.getLowStockProducts);
+
+/**
+ * @swagger
  * /api/inventory/products/{id}:
  *   get:
  *     summary: Get product by ID
@@ -85,18 +115,6 @@ router.post('/products', authenticateToken, authorizeRoles('ADMIN'), validatePro
  *         description: Product not found
  */
 router.get('/products/:id', inventoryController.getProductById);
-
-/**
- * @swagger
- * /api/inventory/products:
- *   get:
- *     summary: Get all products
- *     tags: [Products]
- *     responses:
- *       200:
- *         description: List of all products
- */
-router.get('/products', inventoryController.getAllProducts);
 
 /**
  * @swagger

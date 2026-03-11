@@ -124,6 +124,17 @@ class InventoryController {
       res.status(400).json({ message: error.message });
     }
   }
+
+  // Get low stock products
+  async getLowStockProducts(req, res) {
+    try {
+      const threshold = parseInt(req.query.threshold) || 10;
+      const products = await inventoryService.getLowStockProducts(threshold);
+      res.status(200).json(products);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  }
 }
 
 module.exports = new InventoryController();
