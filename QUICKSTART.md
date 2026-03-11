@@ -1,172 +1,280 @@
-# Quick Start Guide
+# Quick Start Guide - Node.js/Express E-Commerce
 
-Get the E-Commerce microservices running in 5 minutes!
+## Prerequisites
+
+- Node.js 18+ or 20+
+- Docker Desktop (optional, for Docker setup)
+- Git
 
 ## Option 1: Docker Compose (Recommended)
 
-### Prerequisites
-- Docker Desktop installed
-- 8GB RAM available
+### Start Everything
 
-### Steps
-
-1. **Clone and Navigate**
 ```bash
+# Navigate to project directory
 cd E-Commerce
+
+# Start all services with Docker Compose
+docker-compose -f docker-compose-node.yml up -d --build
+
+# Wait for services to start (about 30-60 seconds)
+
+# Check status
+docker-compose -f docker-compose-node.yml ps
 ```
 
-2. **Start All Services**
+### Access Services
+
+- **Frontend**: http://localhost:3000
+- **Order API Docs**: http://localhost:8080/api-docs
+- **User API Docs**: http://localhost:8081/api-docs
+- **Inventory API Docs**: http://localhost:8082/api-docs
+- **Payment API Docs**: http://localhost:8083/api-docs
+
+### View Logs
+
 ```bash
-docker-compose up --build
+# All services
+docker-compose -f docker-compose-node.yml logs -f
+
+# Specific service
+docker-compose -f docker-compose-node.yml logs -f user-service
 ```
 
-3. **Wait for Services** (2-3 minutes)
-Watch for these messages:
-```
-user-service        | Started UserServiceApplication
-inventory-service   | Started InventoryServiceApplication
-order-service       | Started OrderServiceApplication
-payment-service     | Started PaymentServiceApplication
-```
+### Stop Everything
 
-4. **Test the Setup**
-
-Open these URLs in your browser:
-- User Service: http://localhost:8081/swagger-ui.html
-- Inventory Service: http://localhost:8082/swagger-ui.html
-- Order Service: http://localhost:8080/swagger-ui.html
-- Payment Service: http://localhost:8083/swagger-ui.html
-
-5. **Run Integration Test**
 ```bash
-bash test-integration.sh
+docker-compose -f docker-compose-node.yml down
 ```
 
-**Done!** ✅
+## Option 2: Local Development
 
----
+### 1. Start MongoDB
 
-## Option 2: Run Services Individually
+```bash
+docker run -d -p 27017:27017 --name mongodb mongo:7-jammy
+```
 
-### Prerequisites
-- Java 17
-- Maven 3.6+
+### 2. Install Dependencies for All Services
 
-### Steps
+```bash
+# User Service
+cd backend/user-service
+npm install
+cd ../..
+
+# Inventory Service
+cd backend/inventory-service
+npm install
+cd ../..
+
+# Payment Service
+cd backend/payment-service
+npm install
+cd ../..
+
+# Order Service
+cd backend/order-service
+npm install
+cd ../..
+
+# Frontend
+cd frontend
+npm install
+cd ..
+```
+
+### 3. Start Services (in separate terminals)
 
 **Terminal 1 - User Service:**
 ```bash
-cd user-service
-mvn spring-boot:run
+cd backend/user-service
+npm run dev
 ```
 
 **Terminal 2 - Inventory Service:**
 ```bash
-cd inventory-service
-mvn spring-boot:run
+cd backend/inventory-service
+npm run dev
 ```
 
 **Terminal 3 - Payment Service:**
 ```bash
-cd payment-service
-mvn spring-boot:run
+cd backend/payment-service
+npm run dev
 ```
 
 **Terminal 4 - Order Service:**
 ```bash
-cd order-service
-mvn spring-boot:run
+cd backend/order-service
+npm run dev
 ```
 
-Wait 30 seconds, then test at http://localhost:8080/swagger-ui.html
+**Terminal 5 - Frontend:**
+```bash
+cd frontend
+npm run dev
+```
 
----
+### 4. Access Application
 
-## Quick Test
+- **Frontend**: http://localhost:3000
+- **All API Documentation**: See option 1 above
+
+## First Time Setup
 
 ### 1. Register a User
-```bash
-curl -X POST http://localhost:8081/api/users/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "testuser",
-    "email": "test@example.com",
-    "password": "password123",
-    "fullName": "Test User",
-    "address": "123 Test St"
-  }'
-```
 
-### 2. Create a Product
-```bash
-curl -X POST http://localhost:8082/api/inventory/products \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Test Laptop",
-    "sku": "LAPTOP001",
-    "price": 999.99,
-    "stockQuantity": 50,
-    "category": "Electronics"
-  }'
-```
+Open http://localhost:3000 and click "Register here"
 
-### 3. Create an Order (Tests Full Integration!)
-```bash
-curl -X POST http://localhost:8080/api/orders \
-  -H "Content-Type: application/json" \
-  -d '{
-    "userId": 1,
-    "items": [{"productId": 1, "quantity": 2}],
-    "shippingAddress": "123 Test Street"
-  }'
-```
+Fill in:
+- Full Name
+- Username
+- Email
+- Password
+- Select Role (Customer/Admin/Vendor)
 
-**Expected Result:** Order created with status "CONFIRMED" ✅
+### 2. Create Products (Admin/Vendor)
 
----
+1. Login with your credentials
+2. Go to "Products" page
+3. Click "Add Product"
+4. Fill in product details
+
+### 3. Create an Order
+
+1. Make sure products exist
+2. Go to "Orders" page
+3. Click "Create Order"
+4. Select product, quantity, payment method
+5. Submit order
 
 ## Troubleshooting
 
-### Services Won't Start
-```bash
-# Stop all containers
-docker-compose down
+### Port Already in Use
 
-# Remove old images
-docker system prune -a
+**Windows PowerShell:**
+```powershell
+# Find process using port 8080
+Get-Process -Id (Get-NetTCPConnection -LocalPort 8080).OwningProcess
 
-# Retry
-docker-compose up --build
+# Kill it
+Stop-Process -Id <PID> -Force
 ```
 
-### Port Already in Use
+**Linux/Mac:**
 ```bash
-# On Windows
-netstat -ano | findstr :8080
-taskkill /PID <PID> /F
-
-# On Mac/Linux
+# Find and kill process using port 8080
 lsof -ti:8080 | xargs kill -9
 ```
 
-### Integration Test Fails
-- Make sure all 4 services show "Started" in logs
-- Wait 30 seconds after startup
-- Check http://localhost:8080/actuator/health shows UP
+### MongoDB Connection Error
 
----
+```bash
+# Check if MongoDB is running
+docker ps | grep mongodb
+
+# If not, start it
+docker start mongodb
+
+# Or create new instance
+docker run -d -p 27017:27017 --name mongodb mongo:7-jammy
+```
+
+### Service Won't Start
+
+```bash
+# Clear node_modules and reinstall
+cd <service-directory>
+rm -rf node_modules package-lock.json
+npm install
+npm run dev
+```
+
+### Docker Issues
+
+```bash
+# Remove all containers
+docker-compose -f docker-compose-node.yml down -v
+
+# Rebuild everything
+docker-compose -f docker-compose-node.yml up -d --build
+
+# View specific service logs
+docker logs -f <service-name>
+```
+
+## Testing API Endpoints
+
+### Using Swagger UI
+
+Visit the API documentation URLs listed above and use the "Try it out" feature.
+
+### Using cURL
+
+**Register User:**
+```bash
+curl -X POST http://localhost:8081/api/users/register \
+  -H "Content-Type: application/json" \
+  -d "{\"username\":\"john\",\"email\":\"john@example.com\",\"password\":\"password123\",\"fullName\":\"John Doe\",\"role\":\"CUSTOMER\"}"
+```
+
+**Create Product:**
+```bash
+curl -X POST http://localhost:8082/api/inventory/products \
+  -H "Content-Type: application/json" \
+  -d "{\"name\":\"Laptop\",\"description\":\"Gaming Laptop\",\"price\":1299.99,\"quantity\":50,\"category\":\"Electronics\",\"sku\":\"LAP-001\"}"
+```
+
+## Environment Variables
+
+### Development (.env files)
+
+Each service has a `.env` file with default settings. For production, update:
+
+**User Service:**
+- `JWT_SECRET` - Change to secure random string
+- `MONGODB_URI` - Update for production database
+
+**All Services:**
+- `NODE_ENV=production`
+- `MONGODB_URI` - Production MongoDB URL
+
+### Docker Compose
+
+Edit `docker-compose-node.yml` to change environment variables for all services.
 
 ## Next Steps
 
-1. ✅ Explore API Documentation (Swagger UI)
-2. ✅ Read [README.md](README.md) for detailed information
-3. ✅ Check [DEPLOYMENT.md](DEPLOYMENT.md) for cloud deployment
-4. ✅ Review [PROJECT_REPORT.md](PROJECT_REPORT.md) for assignment report
+1. ✅ Get all services running
+2. ✅ Test the complete flow (Register → Create Product → Create Order)
+3. 📝 Set up CI/CD pipeline (see GitHub Actions templates)
+4. 🚀 Deploy to cloud (AWS ECS, Azure Container Apps, etc.)
+5. 🔒 Integrate SAST tools (SonarCloud, Snyk)
+6. 📊 Add monitoring and logging
 
----
+## Need Help?
 
-## Support
+Check the full README-NODE.md for:
+- Detailed architecture explanation
+- Service-specific documentation
+- Cloud deployment guides
+- Security best practices
+- CI/CD setup instructions
 
-- **Can't access Swagger?** Make sure service is running on correct port
-- **Order creation fails?** Check all services are UP in Docker logs
-- **Need help?** Check logs: `docker-compose logs -f [service-name]`
+## Project Structure Reference
+
+```
+E-Commerce/
+├── frontend/                  # Frontend (Port 3000)
+├── backend/                   # Backend services
+│   ├── user-service/          # User Service (Port 8081)
+│   ├── inventory-service/     # Inventory Service (Port 8082)
+│   ├── payment-service/       # Payment Service (Port 8083)
+│   └── order-service/         # Order Service (Port 8080)
+├── docker-compose.yml         # Docker Compose config
+├── README.md                  # Full documentation
+└── QUICKSTART.md              # This file
+```
+
+Happy coding! 🚀
