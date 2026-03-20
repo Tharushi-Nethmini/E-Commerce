@@ -81,10 +81,11 @@ class ServiceClient {
   }
 
   // Payment Service calls
-  async processPayment(orderId, amount, paymentMethod) {
+  async processPayment(orderId, userId, amount, paymentMethod) {
     try {
       const response = await axios.post(`${PAYMENT_SERVICE_URL}/api/payments/process`, {
         orderId,
+        userId,
         amount,
         paymentMethod
       });

@@ -11,6 +11,7 @@ const ORDER_STATUSES = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVE
 function OrdersPage() {
   const [orders, setOrders] = useState([])
   const [products, setProducts] = useState([])
+  const [savedMethods, setSavedMethods] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [updatingStatus, setUpdatingStatus] = useState(null)
@@ -26,7 +27,10 @@ function OrdersPage() {
 
   useEffect(() => {
     fetchOrders()
-    if (!isAdmin) fetchProducts()
+    if (!isAdmin) {
+      fetchProducts()
+      fetchPaymentMethods()
+    }
     const interval = setInterval(fetchOrders, 10000)
     return () => clearInterval(interval)
   }, [isAdmin])
@@ -51,6 +55,28 @@ function OrdersPage() {
       setProducts(response.data)
     } catch (error) {
       console.error('Error fetching products:', error)
+    }
+  }
+
+  const fetchPaymentMethods = async () => {
+    try {
+      const currentUserId = user?._id || user?.id
+      if (!currentUserId) return
+
+      const response = await api.get(
+        `${process.env.NEXT_PUBLIC_API_PAYMENT_SERVICE}/api/payments/methods/${currentUserId}`
+      )
+
+      const methods = response.data || []
+      setSavedMethods(methods)
+
+      const defaultMethod = methods.find((method) => method.isDefault)
+      if (defaultMethod?.type) {
+        setOrderData((prev) => ({ ...prev, paymentMethod: defaultMethod.type }))
+      }
+    } catch (error) {
+      console.error('Error fetching payment methods:', error)
+      setSavedMethods([])
     }
   }
 
@@ -262,7 +288,7 @@ function OrdersPage() {
                   <option value="">Select a product</option>
                   {products.filter(p => p.quantity > 0).map((product) => (
                     <option key={product.id} value={product.id}>
-                      {product.name} - ${product.price} (Stock: {product.quantity})
+                      {product.name} - Rs. {Number(product.price || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (Stock: {product.quantity})
                     </option>
                   ))}
                 </select>
@@ -283,10 +309,20 @@ function OrdersPage() {
                   value={orderData.paymentMethod}
                   onChange={(e) => setOrderData({ ...orderData, paymentMethod: e.target.value })}
                 >
-                  <option value="CREDIT_CARD">Credit Card</option>
-                  <option value="DEBIT_CARD">Debit Card</option>
-                  <option value="PAYPAL">PayPal</option>
-                  <option value="CASH_ON_DELIVERY">Cash on Delivery</option>
+                  {savedMethods.length > 0 ? (
+                    savedMethods.map((method) => (
+                      <option key={method._id || method.id} value={method.type}>
+                        {`${method.type.replace(/_/g, ' ')}${method.brand ? ` - ${method.brand}` : ''}${method.last4 ? ` (**** ${method.last4})` : ''}${method.isDefault ? ' [Default]' : ''}`}
+                      </option>
+                    ))
+                  ) : (
+                    <>
+                      <option value="CREDIT_CARD">Credit Card</option>
+                      <option value="DEBIT_CARD">Debit Card</option>
+                      <option value="PAYPAL">PayPal</option>
+                      <option value="CASH_ON_DELIVERY">Cash on Delivery</option>
+                    </>
+                  )}
                 </select>
               </div>
               <div className="order-modal-actions">

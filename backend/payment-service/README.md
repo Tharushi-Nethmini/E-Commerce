@@ -20,7 +20,16 @@ Payment processing microservice for the E-Commerce application.
 - `GET /api/payments/:id` - Get payment by ID
 - `GET /api/payments/order/:orderId` - Get payment by order ID
 - `GET /api/payments` - Get all payments
+- `GET /api/payments/history` - Get payment history (filter + pagination)
 - `POST /api/payments/:id/refund` - Refund a payment
+- `GET /api/payments/:id/refund-status` - Get refund status
+- `GET /api/payments/:id/invoice` - Generate invoice data
+
+### Payment Methods Management
+- `POST /api/payments/methods` - Add a payment method
+- `GET /api/payments/methods/:userId` - Get all payment methods for a user
+- `PUT /api/payments/methods/:methodId` - Update a payment method
+- `DELETE /api/payments/methods/:methodId` - Delete a payment method
 
 ### Inter-Service Communication
 - `POST /api/payments/status` - Get payment status for an order
@@ -79,12 +88,20 @@ This service is called by:
 
 ```javascript
 {
+  userId: String (optional, indexed),
   orderId: String (required, indexed),
   amount: Number (required),
   paymentMethod: String (enum),
   transactionId: String (unique),
   status: String (enum: PENDING, PROCESSING, COMPLETED, FAILED, REFUNDED),
   failureReason: String,
+  refund: {
+    status: String (enum: NONE, REQUESTED, REFUNDED),
+    reason: String,
+    amount: Number,
+    requestedAt: Date,
+    refundedAt: Date
+  },
   processedAt: Date,
   createdAt: Date,
   updatedAt: Date

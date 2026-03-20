@@ -43,6 +43,7 @@ class OrderService {
         console.log('💳 Step 4: Processing payment...');
         const paymentResult = await serviceClient.processPayment(
           order._id.toString(),
+          userId,
           totalAmount,
           paymentMethod
         );

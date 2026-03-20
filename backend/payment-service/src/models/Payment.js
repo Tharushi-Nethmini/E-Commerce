@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 
 const paymentSchema = new mongoose.Schema({
+  userId: {
+    type: String,
+    index: true
+  },
   orderId: {
     type: String,
     required: [true, 'Order ID is required'],
@@ -31,6 +35,26 @@ const paymentSchema = new mongoose.Schema({
   },
   processedAt: {
     type: Date
+  },
+  refund: {
+    status: {
+      type: String,
+      enum: ['NONE', 'REQUESTED', 'REFUNDED'],
+      default: 'NONE'
+    },
+    reason: {
+      type: String
+    },
+    amount: {
+      type: Number,
+      min: [0, 'Refund amount cannot be negative']
+    },
+    requestedAt: {
+      type: Date
+    },
+    refundedAt: {
+      type: Date
+    }
   },
   createdAt: {
     type: Date,

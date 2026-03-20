@@ -14,6 +14,7 @@ function CartPage() {
   const [loading, setLoading] = useState(true)
   const [checkingOut, setCheckingOut] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState('CREDIT_CARD')
+  const [savedMethods, setSavedMethods] = useState([])
   const [successMsg, setSuccessMsg] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
 
@@ -21,6 +22,10 @@ function CartPage() {
 
   useEffect(() => {
     if (userId) fetchCart()
+  }, [userId])
+
+  useEffect(() => {
+    if (userId) fetchSavedMethods()
   }, [userId])
 
   const fetchCart = async () => {
@@ -33,6 +38,26 @@ function CartPage() {
       console.error('Error fetching cart:', err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchSavedMethods = async () => {
+    try {
+      const res = await api.get(
+        `${process.env.NEXT_PUBLIC_API_PAYMENT_SERVICE}/api/payments/methods/${userId}`
+      )
+
+      const methods = res.data || []
+      setSavedMethods(methods)
+
+      const defaultMethod = methods.find((method) => method.isDefault)
+      if (defaultMethod?.type) {
+        setPaymentMethod(defaultMethod.type)
+      } else if (methods[0]?.type) {
+        setPaymentMethod(methods[0].type)
+      }
+    } catch (err) {
+      setSavedMethods([])
     }
   }
 
@@ -232,9 +257,17 @@ function CartPage() {
                 value={paymentMethod}
                 onChange={e => setPaymentMethod(e.target.value)}
               >
-                {PAYMENT_METHODS.map(m => (
-                  <option key={m} value={m}>{m.replace(/_/g, ' ')}</option>
-                ))}
+                {savedMethods.length > 0 ? (
+                  savedMethods.map((method) => (
+                    <option key={method._id || method.id} value={method.type}>
+                      {`${method.type.replace(/_/g, ' ')}${method.brand ? ` - ${method.brand}` : ''}${method.last4 ? ` (**** ${method.last4})` : ''}${method.isDefault ? ' [Default]' : ''}`}
+                    </option>
+                  ))
+                ) : (
+                  PAYMENT_METHODS.map(m => (
+                    <option key={m} value={m}>{m.replace(/_/g, ' ')}</option>
+                  ))
+                )}
               </select>
             </div>
 
