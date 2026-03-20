@@ -148,14 +148,24 @@ Fill in:
 ### 3. Create an Order
 
 1. Make sure products exist
-2. Go to "Orders" page
-3. Click "Create Order"
-4. Select product, quantity, payment method
-5. Submit order
+2. Go to "Products" page and click **Add to Cart**
+3. Open "Cart" page and choose payment method
+4. Click **Checkout**
+5. Open "Payments" page and verify payment appears
+
+> Alternate path: Users can also create an order directly from the Orders page modal.
 
 > **Search tip:** Use the search bar and status dropdown on the Orders page to quickly find specific orders.
 
-### 4. Export Analytics (Admin)
+### 4. Test Payment Features
+
+1. Open **Payments** page
+2. Use status/date filters to verify payment history
+3. Click **Generate Invoice** to download the styled PDF invoice
+4. Add a saved payment method in the Payment Methods section
+5. Set one as default and verify Cart checkout auto-selects it
+
+### 5. Export Analytics (Admin)
 
 1. Login as ADMIN
 2. Go to Analytics dashboard (`/analytics`)

@@ -30,6 +30,9 @@ You now have a **complete, production-ready microservices-based e-commerce platf
    - Payment processing
    - Transaction tracking
    - Refund handling
+   - Payment history filtering and pagination
+   - Saved payment methods CRUD
+   - Invoice payload API for PDF generation
    - 12+ JavaScript files, fully documented
 
 ### DevOps Infrastructure
@@ -78,7 +81,10 @@ You now have a **complete, production-ready microservices-based e-commerce platf
   - **Products**: filter by name, category, or SKU
   - **Orders**: filter by ID / user / product + status dropdown  
   - **Users**: filter by username, email, or full name + role dropdown
-  - **Payments**: filter by payment ID / order ID / transaction ID + status dropdown
+   - **Payments**: filter by payment ID / order ID / transaction ID + status/date filters
+- **Payment methods module** — add, set default, and delete saved user payment methods from Payments page
+- **Checkout integration** — Cart checkout and user Order modal reuse saved payment methods (default pre-selection)
+- **Professional invoice PDF** — Payments page downloads branded invoice PDFs matching the admin report style
 - **Product image upload zone** — styled drag-and-drop area with live preview
 - **Rs. currency** — Sri Lankan Rupees throughout all monetary displays
 - **Secure modals** — blur-backdrop overlays with keyframe animation (z-index 9999)

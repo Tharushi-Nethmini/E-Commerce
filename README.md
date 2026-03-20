@@ -224,11 +224,21 @@ Each service has Swagger documentation available:
 - Transaction tracking
 - Simulated payment gateway (90% success rate)
 - Refund support
+- Payment history with filters and pagination
+- Saved payment methods management per user
+- Invoice payload generation for completed/refunded payments
 
 **Endpoints**:
 - `POST /api/payments/process` - Process payment
 - `GET /api/payments` - List payments
+- `GET /api/payments/history` - Filtered payment history
 - `POST /api/payments/:id/refund` - Refund payment
+- `GET /api/payments/:id/refund-status` - Refund status
+- `GET /api/payments/:id/invoice` - Invoice data
+- `POST /api/payments/methods` - Add payment method
+- `GET /api/payments/methods/:userId` - List saved methods
+- `PUT /api/payments/methods/:methodId` - Update payment method
+- `DELETE /api/payments/methods/:methodId` - Delete payment method
 
 ### Order Service (Port 8080)
 
@@ -255,7 +265,10 @@ Each service has Swagger documentation available:
   - **Products**: search by name, category, or SKU
   - **Orders**: search by order ID / user ID / product ID + status dropdown filter
   - **Users**: search by username, email, or full name + role dropdown filter
-  - **Payments**: search by payment ID / order ID / transaction ID + status dropdown filter
+  - **Payments**: search by payment ID / order ID / transaction ID + status/date filters
+- **Payment Methods Management** — Add/set-default/delete saved payment methods on the Payments page
+- **Invoice Generation** — One-click professional PDF invoice download from Payments page
+- **Checkout Method Reuse** — Cart checkout and user Create Order modal consume saved payment methods (default auto-selected)
 - **Professional NexMart UI** — Indigo-purple gradient design system, rounded cards, pill badges across all pages
 - **Product Image Upload** — Drag-and-drop styled upload zone with live preview
 - **Rs. Currency** — All monetary values displayed in Sri Lankan Rupees
@@ -371,6 +384,13 @@ curl -X POST http://localhost:8080/api/orders \
   }'
 ```
 
+### 4. Verify Payment Features
+
+- Open Payments page and verify the new order appears in **My Payments**
+- Click **Generate Invoice** to download a professional PDF invoice
+- Add a payment method and set one as default
+- Go to Cart (or user Create Order modal) and confirm default saved method is preselected
+
 ## 🚀 Deployment
 
 ### Cloud Deployment Options
@@ -437,7 +457,7 @@ When creating an order:
 4. **Order Service** → reserves stock with Inventory Service
 5. **Order Service** → processes payment with Payment Service
 6. **Order Service** → confirms stock with Inventory Service
-7. **Order Service** → returns success to Frontend
+7. **Order Service** → stores order as `PENDING` (awaiting admin confirmation) and returns response
 
 ## 📄 License
 

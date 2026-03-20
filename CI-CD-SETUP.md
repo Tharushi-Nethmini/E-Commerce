@@ -121,6 +121,10 @@ git push origin main
    - Ready for AWS ECS/Azure deployment
    - Commented out - customize for your needs
 
+5. **Post-Deploy Smoke Tests** (Recommended)
+  - Verify `http://<payment-service-host>/api-docs` is reachable
+  - Verify new payment APIs respond (`/api/payments/history`, `/api/payments/methods/:userId`, `/api/payments/:id/invoice`)
+
 ## Environment-Specific Deployments
 
 ### Development Branch

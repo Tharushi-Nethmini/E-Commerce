@@ -48,7 +48,7 @@ Our e-commerce application is built using a microservices architecture with four
      ▼              ▼              ▼              ▼
 ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐
 │ User DB  │   │Product DB│   │ Order DB │   │Payment DB│
-│   (H2)   │   │   (H2)   │   │   (H2)   │   │   (H2)   │
+│(MongoDB) │   │(MongoDB) │   │(MongoDB) │   │(MongoDB) │
 └──────────┘   └──────────┘   └──────────┘   └──────────┘
 ```
 
@@ -161,11 +161,21 @@ Our e-commerce application is built using a microservices architecture with four
 - Refund processing
 - Payment gateway simulation
 - Duplicate payment prevention
+- Payment history API with filters and pagination
+- Saved payment methods management (add/update/delete/default)
+- Invoice payload generation for PDF export
 
 **API Endpoints:**
 - `POST /api/payments/process` - Process payment
 - `GET /api/payments/order/{orderId}` - Get payment by order
 - `POST /api/payments/{id}/refund` - Process refund
+- `GET /api/payments/history` - Filtered payment history
+- `GET /api/payments/{id}/refund-status` - Get refund status
+- `GET /api/payments/{id}/invoice` - Generate invoice data
+- `POST /api/payments/methods` - Add payment method
+- `GET /api/payments/methods/{userId}` - Get methods for user
+- `PUT /api/payments/methods/{methodId}` - Update payment method
+- `DELETE /api/payments/methods/{methodId}` - Delete payment method
 
 **Role in Application:** Handles payment processing for orders. Called by the Order Service after stock reservation to complete the transaction.
 
@@ -254,7 +264,7 @@ Step 4: Order Service → Inventory Service
   Response: Success
 
 Step 5: Order Service → Payment Service
-  POST /api/payments/process { orderId: 1, amount: 199.98 }
+  POST /api/payments/process { orderId: 1, userId: 1, amount: 199.98 }
   Response: { status: "COMPLETED", transactionId: "TXN123" }
 
 Step 6: Order Service → Inventory Service
@@ -262,7 +272,7 @@ Step 6: Order Service → Inventory Service
   Response: Success
 
 Step 7: Order Service → Client
-  Response: Order created with status CONFIRMED
+  Response: Order created with status PENDING (awaiting admin confirmation)
 ```
 
 ---

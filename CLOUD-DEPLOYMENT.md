@@ -4,6 +4,15 @@
 
 This guide covers deploying the NexMart microservices platform to AWS ECS, Azure Container Apps, and Google Cloud Run.
 
+After deployment, validate the enhanced Payment Service endpoints via Swagger:
+- `GET /api/payments/history`
+- `GET /api/payments/{id}/refund-status`
+- `GET /api/payments/{id}/invoice`
+- `POST /api/payments/methods`
+- `GET /api/payments/methods/{userId}`
+- `PUT /api/payments/methods/{methodId}`
+- `DELETE /api/payments/methods/{methodId}`
+
 ## Prerequisites
 
 - Docker images pushed to container registry (Docker Hub/ECR/ACR)

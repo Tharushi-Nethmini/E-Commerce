@@ -129,9 +129,11 @@ http://localhost:3000
 
 #### Create Order
 1. Login as CUSTOMER
-2. Go to Orders
-3. Create new order with product ID
-4. Check payment status
+2. Go to Products and add item(s) to cart
+3. Open Cart and complete checkout
+4. Go to Payments and confirm payment appears
+
+> Alternate test path: create order directly from Orders page modal.
 
 #### Test Search & Filter (All Roles)
 
@@ -156,6 +158,15 @@ http://localhost:3000
 1. Go to the Payments page
 2. Type a transaction ID or order ID — matching payments appear
 3. Use the **Status** dropdown to filter by `COMPLETED`, `FAILED`, etc.
+4. Use date filters and click **Apply**
+5. Click **Generate Invoice** and verify PDF download starts
+
+#### Test Payment Methods Integration
+1. On Payments page, add a payment method (`last4`, expiry, type)
+2. Mark one method as default
+3. Open Cart page and verify default method is preselected
+4. Open user Create Order modal and verify saved methods are listed
+5. Delete a method and confirm it no longer appears in Cart/Orders selectors
 
 #### Test Analytics Export (Admin Only)
 1. Login as ADMIN
@@ -354,6 +365,8 @@ Integration Tests:
 [ ] Admin can create product
 [ ] Customer can create order
 [ ] Payment processes successfully
+[ ] Saved payment method can be added/updated/deleted
+[ ] Invoice PDF downloads from Payments page
 [ ] Order status updates correctly
 
 Notes:
