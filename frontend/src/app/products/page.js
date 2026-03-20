@@ -9,6 +9,7 @@ import '@/styles/products.css'
 function ProductsPage() {
   const { user } = useAuth()
   const isAdmin = user?.role === 'ADMIN'
+  const getProductId = (product) => product?._id || product?.id
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -48,11 +49,11 @@ function ProductsPage() {
     try {
       let productId
       if (editingProduct) {
-        const response = await api.put(
-          `${process.env.NEXT_PUBLIC_API_INVENTORY_SERVICE}/api/inventory/products/${editingProduct.id}`,
+        productId = getProductId(editingProduct)
+        await api.put(
+          `${process.env.NEXT_PUBLIC_API_INVENTORY_SERVICE}/api/inventory/products/${productId}`,
           formData
         )
-        productId = editingProduct.id
       } else {
         const response = await api.post(
           `${process.env.NEXT_PUBLIC_API_INVENTORY_SERVICE}/api/inventory/products`,
@@ -217,7 +218,7 @@ function ProductsPage() {
 
       <div className="products-grid">
         {filteredProducts.map((product) => (
-          <div key={product.id} className="product-card">
+          <div key={getProductId(product)} className="product-card">
             {product.imageUrl && (
               <div className="product-image-container">
                 <img 
@@ -267,7 +268,7 @@ function ProductsPage() {
                     Edit
                   </button>
                   <button
-                    onClick={() => handleDelete(product.id)}
+                    onClick={() => handleDelete(getProductId(product))}
                     className="product-delete-btn"
                   >
                     <FaTrash />
