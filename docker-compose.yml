@@ -1,19 +1,44 @@
-# Note: Services use Google Distroless base images for security
-# Distroless images don't include shell/wget/curl, so health checks are simplified
-# For production (Kubernetes), use HTTP-based liveness/readiness probes on /actuator/health
+# E-Commerce Microservices - Docker Compose Configuration
+# Next.js Frontend + Node.js/Express Backend Services
+
+version: '3.8'
 
 services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7-jammy
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=ecommerce
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # User Service
   user-service:
     build:
-      context: ./user-service
+      context: ./backend/user-service
       dockerfile: Dockerfile
     container_name: user-service
     ports:
-      - "9081:8081"
+      - "8081:8081"
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SERVER_PORT=8081
+      - PORT=8081
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://mongodb:27017/user-service
+      - JWT_SECRET=your-production-jwt-secret-change-this
+      - JWT_EXPIRES_IN=7d
+    depends_on:
+      mongodb:
+        condition: service_healthy
     restart: on-failure
     networks:
       - ecommerce-network
@@ -21,14 +46,18 @@ services:
   # Inventory Service
   inventory-service:
     build:
-      context: ./inventory-service
+      context: ./backend/inventory-service
       dockerfile: Dockerfile
     container_name: inventory-service
     ports:
-      - "9082:8082"
+      - "8082:8082"
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SERVER_PORT=8082
+      - PORT=8082
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://mongodb:27017/inventory-service
+    depends_on:
+      mongodb:
+        condition: service_healthy
     restart: on-failure
     networks:
       - ecommerce-network
@@ -36,52 +65,69 @@ services:
   # Payment Service
   payment-service:
     build:
-      context: ./payment-service
+      context: ./backend/payment-service
       dockerfile: Dockerfile
     container_name: payment-service
     ports:
-      - "9083:8083"
+      - "8083:8083"
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SERVER_PORT=8083
+      - PORT=8083
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://mongodb:27017/payment-service
+    depends_on:
+      mongodb:
+        condition: service_healthy
     restart: on-failure
     networks:
       - ecommerce-network
 
-  # Frontend - React app served via Nginx
+  # Order Service (Orchestrator)
+  order-service:
+    build:
+      context: ./backend/order-service
+      dockerfile: Dockerfile
+    container_name: order-service
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://mongodb:27017/order-service
+      - USER_SERVICE_URL=http://user-service:8081
+      - INVENTORY_SERVICE_URL=http://inventory-service:8082
+      - PAYMENT_SERVICE_URL=http://payment-service:8083
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      user-service:
+        condition: service_started
+      inventory-service:
+        condition: service_started
+      payment-service:
+        condition: service_started
+    restart: on-failure
+    networks:
+      - ecommerce-network
+
+  # Next.js Frontend
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: frontend
     ports:
-      - "3000:80"
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_USER_SERVICE=http://localhost:8081
+      - NEXT_PUBLIC_API_INVENTORY_SERVICE=http://localhost:8082
+      - NEXT_PUBLIC_API_ORDER_SERVICE=http://localhost:8080
+      - NEXT_PUBLIC_API_PAYMENT_SERVICE=http://localhost:8083
     depends_on:
       - user-service
       - inventory-service
       - payment-service
       - order-service
-    networks:
-      - ecommerce-network
-
-  # Order Service (orchestrator - depends on other services)
-  order-service:
-    build:
-      context: ./order-service
-      dockerfile: Dockerfile
-    container_name: order-service
-    ports:
-      - "9080:8080"
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SERVER_PORT=8080
-      - services.user-service.url=http://user-service:8081
-      - services.inventory-service.url=http://inventory-service:8082
-      - services.payment-service.url=http://payment-service:8083
-    depends_on:
-      - user-service
-      - inventory-service
-      - payment-service
     restart: on-failure
     networks:
       - ecommerce-network
@@ -89,3 +135,7 @@ services:
 networks:
   ecommerce-network:
     driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local
