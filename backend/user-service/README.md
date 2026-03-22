@@ -6,7 +6,7 @@ User authentication and management microservice for the E-Commerce application.
 
 - User registration and authentication
 - JWT token generation and validation
-- Role-based access control (CUSTOMER, ADMIN, VENDOR)
+- Role-based access control (CUSTOMER, ADMIN, SUPPLIER)
 - Password encryption with bcrypt
 - MongoDB database
 - Swagger API documentation
@@ -88,7 +88,7 @@ This service is called by:
   email: String (unique, required),
   password: String (hashed, required),
   fullName: String (required),
-  role: String (enum: CUSTOMER, ADMIN, VENDOR),
+  role: String (enum: CUSTOMER, ADMIN, SUPPLIER),
   createdAt: Date,
   updatedAt: Date
 }

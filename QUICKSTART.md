@@ -132,11 +132,11 @@ Fill in:
 - Username
 - Email
 - Password
-- Select Role (Customer/Admin/Vendor)
+- Select Role (Customer/Admin/Supplier)
 
 > **Role routing:** After login, **ADMIN** users are directed to the Analytics dashboard (`/analytics`). **CUSTOMER** users land on the personalised Home dashboard (`/home`) showing order stats and recent activity.
 
-### 2. Create Products (Admin/Vendor)
+### 2. Create Products (Admin/Supplier)
 
 1. Login with your credentials
 2. Go to "Products" page

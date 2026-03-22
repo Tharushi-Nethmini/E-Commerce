@@ -302,7 +302,7 @@
 
 .role-admin    { background: #FEF2F2; color: #B91C1C; }
 .role-customer { background: #EEF2FF; color: #3730A3; }
-.role-vendor   { background: #ECFDF5; color: #065F46; }
+.role-supplier   { background: #ECFDF5; color: #065F46; }
 
 /* Tables */
 .analytics-table-wrap {

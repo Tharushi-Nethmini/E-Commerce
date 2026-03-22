@@ -190,7 +190,7 @@ Each service has Swagger documentation available:
 **Key Features**:
 - JWT-based authentication
 - User registration and login
-- Role-based access (CUSTOMER, ADMIN, VENDOR)
+- Role-based access (CUSTOMER, ADMIN, SUPPLIER)
 - Token validation for other services
 
 **Endpoints**:

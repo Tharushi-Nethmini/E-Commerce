@@ -93,4 +93,4 @@ The frontend integrates with 4 microservices:
 - JWT tokens stored in HTTP-only cookies
 - Automatic token refresh
 - Protected routes with middleware
-- Role-based access control (CUSTOMER, ADMIN, VENDOR)
+- Role-based access control (CUSTOMER, ADMIN, SUPPLIER)

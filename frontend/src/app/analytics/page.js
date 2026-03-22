@@ -194,7 +194,7 @@ function AnalyticsPage() {
                       className="status-bar"
                       style={{
                         width: `${Math.round((count / (userStats.totalUsers || 1)) * 100)}%`,
-                        background: role === 'ADMIN' ? '#EF4444' : role === 'VENDOR' ? '#10B981' : '#3B82F6'
+                        background: role === 'ADMIN' ? '#EF4444' : role === 'SUPPLIER' ? '#10B981' : '#3B82F6'
                       }}
                     />
                   </div>

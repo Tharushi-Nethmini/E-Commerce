@@ -81,7 +81,7 @@ Our e-commerce application is built using a microservices architecture with four
 - Token validation for other services
 - User profile CRUD operations
 - Password encryption using BCrypt
-- Role-based user types (CUSTOMER, ADMIN, VENDOR)
+- Role-based user types (CUSTOMER, ADMIN, SUPPLIER)
 
 **API Endpoints:**
 - `POST /api/users/register` - Register new user

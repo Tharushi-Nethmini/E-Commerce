@@ -18,7 +18,7 @@ const validateUser = [
     .withMessage('Full name is required'),
   body('role')
     .optional()
-    .isIn(['CUSTOMER', 'ADMIN', 'VENDOR'])
+    .isIn(['CUSTOMER', 'ADMIN', 'SUPPLIER'])
     .withMessage('Invalid role'),
   (req, res, next) => {
     const errors = validationResult(req);

@@ -26,7 +26,7 @@ const { validateUser, validateLogin } = require('../middleware/validation');
  *           type: string
  *         role:
  *           type: string
- *           enum: [CUSTOMER, ADMIN, VENDOR]
+ *           enum: [CUSTOMER, ADMIN, SUPPLIER]
  *         createdAt:
  *           type: string
  *           format: date-time

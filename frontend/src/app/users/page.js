@@ -5,7 +5,7 @@ import api from '@/lib/api'
 import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa'
 import '@/styles/users.css'
 
-const ROLES = ['CUSTOMER', 'ADMIN', 'VENDOR']
+const ROLES = ['CUSTOMER', 'ADMIN', 'SUPPLIER']
 
 const emptyForm = { username: '', email: '', password: '', fullName: '', role: 'CUSTOMER' }
 
@@ -82,7 +82,7 @@ function UsersPage() {
   }
 
   const getRoleBadgeClass = (role) => {
-    const map = { ADMIN: 'badge-admin', VENDOR: 'badge-vendor', CUSTOMER: 'badge-customer' }
+    const map = { ADMIN: 'badge-admin', SUPPLIER: 'badge-supplier', CUSTOMER: 'badge-customer' }
     return `user-role-badge ${map[role] || 'badge-customer'}`
   }
 
