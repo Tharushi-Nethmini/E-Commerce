@@ -1,7 +1,35 @@
 const Product = require('../models/Product');
 const { cloudinary } = require('../config/cloudinary');
+const { createLowStockNotification } = require('./notificationService');
 
 class InventoryService {
+      // Approve product (set status to ACTIVE)
+      async approveProduct(productId) {
+        const product = await Product.findById(productId);
+        if (!product) throw new Error('Product not found');
+        product.status = 'ACTIVE';
+        product.rejectionReason = null;
+        await product.save();
+        return product;
+      }
+
+      // Reject product (set status to REJECTED with reason)
+      async rejectProduct(productId, reason) {
+        const product = await Product.findById(productId);
+        if (!product) throw new Error('Product not found');
+        product.status = 'REJECTED';
+        product.rejectionReason = reason;
+        await product.save();
+        return product;
+      }
+    // Get products by filter (used for supplier/admin/customer role-based queries)
+    async getProductsByFilter(filter) {
+      try {
+        return await Product.find(filter).sort({ createdAt: -1 });
+      } catch (error) {
+        throw error;
+      }
+    }
   // Create product
   async createProduct(productData) {
     try {
@@ -64,15 +92,28 @@ class InventoryService {
   // Update product
   async updateProduct(productId, updateData) {
     try {
+      // Coerce price and quantity to numbers if present
+      const update = { ...updateData, updatedAt: new Date() };
+      if (update.price !== undefined) update.price = Number(update.price);
+      if (update.quantity !== undefined) update.quantity = Number(update.quantity);
+
+      // If quantity is being updated, reset reservedQuantity to 0
+      if (update.quantity !== undefined) {
+        update.reservedQuantity = 0;
+      }
+
       const product = await Product.findByIdAndUpdate(
         productId,
-        { ...updateData, updatedAt: new Date() },
+        update,
         { new: true, runValidators: true }
       );
 
       if (!product) {
         throw new Error('Product not found');
       }
+
+      // Debug log: print updated quantity and reservedQuantity
+      console.log(`[DEBUG] Product updated: id=${productId}, quantity=${product.quantity}, reservedQuantity=${product.reservedQuantity}`);
 
       return product;
     } catch (error) {
@@ -176,19 +217,48 @@ class InventoryService {
   async confirmStock(productId, quantity) {
     try {
       const product = await Product.findById(productId);
-      
       if (!product) {
         throw new Error('Product not found');
       }
-
       if (product.reservedQuantity < quantity) {
         throw new Error('Reserved quantity mismatch');
       }
-
       product.quantity -= quantity;
       product.reservedQuantity -= quantity;
       await product.save();
 
+      // DEBUG LOGGING
+      console.log('[CONFIRM STOCK] Product:', {
+        id: product._id,
+        name: product.name,
+        supplier: product.supplier,
+        quantity: product.quantity,
+        reservedQuantity: product.reservedQuantity,
+        lowStockThreshold: product.lowStockThreshold,
+        lowStockNotified: product.lowStockNotified
+      });
+
+      // LOW STOCK IN-APP NOTIFICATION LOGIC
+      if (
+        product.supplier &&
+        product.quantity <= product.lowStockThreshold &&
+        !product.lowStockNotified
+      ) {
+        console.log('[CONFIRM STOCK] Creating low stock notification for supplier:', product.supplier);
+        await createLowStockNotification({
+          userId: product.supplier,
+          productName: product.name,
+          quantity: product.quantity,
+          threshold: product.lowStockThreshold
+        });
+        product.lowStockNotified = true;
+        await product.save();
+      }
+      // Reset notification flag if stock is replenished above threshold
+      if (product.quantity > product.lowStockThreshold && product.lowStockNotified) {
+        product.lowStockNotified = false;
+        await product.save();
+      }
       return {
         success: true,
         message: 'Stock confirmed and deducted',
@@ -220,6 +290,31 @@ class InventoryService {
         releasedQuantity: quantity
       };
     } catch (error) {
+
+        // LOW STOCK IN-APP NOTIFICATION LOGIC (if quantity is updated)
+        if (
+          typeof updateData.quantity === 'number' &&
+          product.supplier
+        ) {
+          // If stock drops to or below threshold and not notified
+          if (
+            product.quantity <= product.lowStockThreshold &&
+            !product.lowStockNotified
+          ) {
+            await createLowStockNotification({
+              userId: product.supplier,
+              productName: product.name,
+              quantity: product.quantity,
+              threshold: product.lowStockThreshold
+            });
+            product.lowStockNotified = true;
+          }
+          // Reset notification flag if stock is replenished above threshold
+          if (product.quantity > product.lowStockThreshold && product.lowStockNotified) {
+            product.lowStockNotified = false;
+          }
+        }
+
       throw error;
     }
   }

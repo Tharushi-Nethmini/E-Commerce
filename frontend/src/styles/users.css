@@ -1,3 +1,23 @@
+.users-table th:nth-child(4), .users-table td:nth-child(4) {
+  white-space: nowrap;
+  width: 120px;
+  min-width: 120px;
+  max-width: 160px;
+}
+.user-reject-btn {
+  padding: 0.4rem 0.75rem;
+  background: #F3E8FF;
+  color: #7C3AED;
+  border: 1px solid #C4B5FD;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+.user-reject-btn:hover {
+  background: #DDD6FE;
+  border-color: #A78BFA;
+}
 /* Users Page Styles */
 
 .users-header {

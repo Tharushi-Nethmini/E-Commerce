@@ -7,6 +7,7 @@ import { FaShoppingBag, FaUsers, FaDollarSign, FaBoxOpen, FaExclamationTriangle,
 import { downloadPDF, downloadExcel } from '@/lib/reportGenerator'
 import '@/styles/analytics.css'
 
+
 function AnalyticsPage() {
   const { user } = useAuth()
   const [orderStats, setOrderStats] = useState(null)
@@ -15,6 +16,11 @@ function AnalyticsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [exporting, setExporting] = useState(null) // 'pdf' | 'excel' | null
+  // Modal state hooks (must be inside component)
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [orderQuantity, setOrderQuantity] = useState(1);
+  const [orderError, setOrderError] = useState('');
 
   useEffect(() => {
     fetchAllStats()
@@ -221,6 +227,7 @@ function AnalyticsPage() {
                   <th>Amount</th>
                   <th>Status</th>
                   <th>Date</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -247,7 +254,7 @@ function AnalyticsPage() {
         </div>
       )}
 
-      {/* Low Stock Products */}
+      {/* Low Stock Products and Modal (moved inside AnalyticsPage for handleRequestClick scope) */}
       {lowStockProducts.length > 0 && (
         <div className="analytics-card analytics-full analytics-danger">
           <h2><FaExclamationTriangle /> Low Stock Products</h2>
@@ -278,6 +285,15 @@ function AnalyticsPage() {
                         {product.quantity - product.reservedQuantity}
                       </span>
                     </td>
+                    <td>
+                      <button 
+                        className="request-btn" 
+                        style={{ padding: '4px 12px', background: '#f59e0b', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}
+                        onClick={() => handleRequestClick(product)}
+                      >
+                        Request
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -285,14 +301,75 @@ function AnalyticsPage() {
           </div>
         </div>
       )}
+      {/* Order Request Modal */}
+      {showRequestModal && selectedProduct && (
+        <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.2)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="modal order-modal" style={{ background: '#fff', padding: 32, borderRadius: 8, minWidth: 320, boxShadow: '0 2px 16px rgba(0,0,0,0.15)' }}>
+            <h3 style={{ marginBottom: 16 }}>Request Stock for <span style={{ color: '#f59e0b' }}>{selectedProduct.name}</span></h3>
+            <label style={{ display: 'block', marginBottom: 16 }}>
+              Quantity:
+              <input 
+                type="number" 
+                min="1" 
+                max="9999" 
+                value={orderQuantity} 
+                onChange={e => setOrderQuantity(e.target.value)} 
+                style={{ marginLeft: 8, padding: 4, width: 80 }}
+              />
+            </label>
+            <div className="modal-actions" style={{ display: 'flex', gap: 12 }}>
+              <button onClick={submitOrderRequest} style={{ background: '#10b981', color: '#fff', border: 'none', borderRadius: 4, padding: '6px 18px', fontWeight: 600 }}>Submit</button>
+              <button onClick={() => setShowRequestModal(false)} style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 4, padding: '6px 18px', fontWeight: 600 }}>Cancel</button>
+            </div>
+            {orderError && <div className="modal-error" style={{ color: '#ef4444', marginTop: 12 }}>{orderError}</div>}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
+
+
+
+
+
+// Add this function at the top of your component (or before the return statement)
+const handleRequestClick = (product) => {
+  alert(`Request for product: ${product.PRODUCT_NAME || product.name}`);
+};
+// ...existing code...
+
+// (removed duplicate AnalyticsPage definition)
+
+async function submitOrderRequest() {
+  if (!orderQuantity || orderQuantity < 1) {
+    setOrderError('Please enter a valid quantity.');
+    return;
+  }
+  if (!selectedProduct) {
+    setOrderError('No product selected.');
+    return;
+  }
+  try {
+    // For demo, use 'CASH_ON_DELIVERY' as payment method (or let admin choose in future)
+    await api.post(`${process.env.NEXT_PUBLIC_API_ORDER_SERVICE}/api/orders`, {
+      userId: user?._id,
+      productId: selectedProduct._id,
+      quantity: Number(orderQuantity),
+      paymentMethod: 'CASH_ON_DELIVERY'
+    });
+    setShowRequestModal(false);
+    alert('Order request submitted!');
+  } catch (err) {
+    setOrderError(err?.response?.data?.message || 'Failed to submit order request.');
+  }
+}
+
 
 export default function Analytics() {
   return (
     <ProtectedRoute adminOnly>
       <AnalyticsPage />
     </ProtectedRoute>
-  )
+  );
 }

@@ -1,9 +1,59 @@
+
 const express = require('express');
 const router = express.Router();
 const inventoryController = require('../controllers/inventoryController');
 const { validateProduct, validateStockCheck } = require('../middleware/validation');
 const { upload } = require('../config/cloudinary');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
+
+/**
+ * @swagger
+ * /api/inventory/products/{id}/approve:
+ *   put:
+ *     summary: Approve a pending product (admin only)
+ *     tags: [Products]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Product approved
+ *       404:
+ *         description: Product not found
+ */
+router.put('/products/:id/approve', authenticateToken, authorizeRoles('ADMIN'), inventoryController.approveProduct);
+
+/**
+ * @swagger
+ * /api/inventory/products/{id}/reject:
+ *   put:
+ *     summary: Reject a pending product (admin only)
+ *     tags: [Products]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               reason:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Product rejected
+ *       404:
+ *         description: Product not found
+ */
+router.put('/products/:id/reject', authenticateToken, authorizeRoles('ADMIN'), inventoryController.rejectProduct);
 
 /**
  * @swagger
@@ -64,7 +114,7 @@ const { authenticateToken, authorizeRoles } = require('../middleware/auth');
  *       400:
  *         description: Invalid input
  */
-router.post('/products', authenticateToken, authorizeRoles('ADMIN'), validateProduct, inventoryController.createProduct);
+router.post('/products', authenticateToken, authorizeRoles('ADMIN', 'SUPPLIER'), validateProduct, inventoryController.createProduct);
 
 /**
  * @swagger
@@ -76,7 +126,7 @@ router.post('/products', authenticateToken, authorizeRoles('ADMIN'), validatePro
  *       200:
  *         description: List of all products
  */
-router.get('/products', inventoryController.getAllProducts);
+router.get('/products', authenticateToken, inventoryController.getAllProducts);
 
 /**
  * @swagger
@@ -140,7 +190,7 @@ router.get('/products/:id', inventoryController.getProductById);
  *       404:
  *         description: Product not found
  */
-router.put('/products/:id', authenticateToken, authorizeRoles('ADMIN'), validateProduct, inventoryController.updateProduct);
+router.put('/products/:id', authenticateToken, authorizeRoles('ADMIN', 'SUPPLIER'), validateProduct, inventoryController.updateProduct);
 
 /**
  * @swagger
@@ -160,7 +210,7 @@ router.put('/products/:id', authenticateToken, authorizeRoles('ADMIN'), validate
  *       404:
  *         description: Product not found
  */
-router.delete('/products/:id', authenticateToken, authorizeRoles('ADMIN'), inventoryController.deleteProduct);
+router.delete('/products/:id', authenticateToken, authorizeRoles('ADMIN', 'SUPPLIER'), inventoryController.deleteProduct);
 
 /**
  * @swagger
@@ -282,7 +332,7 @@ router.post('/release-stock', validateStockCheck, inventoryController.releaseSto
  *       400:
  *         description: Invalid file or request
  */
-router.post('/products/:id/image', authenticateToken, authorizeRoles('ADMIN'), upload.single('image'), inventoryController.uploadProductImage);
+router.post('/products/:id/image', authenticateToken, authorizeRoles('ADMIN', 'SUPPLIER'), upload.single('image'), inventoryController.uploadProductImage);
 
 /**
  * @swagger

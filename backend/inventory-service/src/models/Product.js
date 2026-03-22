@@ -1,6 +1,20 @@
 const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema({
+    supplier: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: false // Only required for supplier-created products
+    },
+    status: {
+      type: String,
+      enum: ['PENDING', 'ACTIVE', 'REJECTED'],
+      default: 'PENDING'
+    },
+    rejectionReason: {
+      type: String,
+      default: null
+    },
   name: {
     type: String,
     required: [true, 'Product name is required'],
@@ -43,6 +57,14 @@ const productSchema = new mongoose.Schema({
   available: {
     type: Boolean,
     default: true
+  },
+  lowStockNotified: {
+    type: Boolean,
+    default: false
+  },
+  lowStockThreshold: {
+    type: Number,
+    default: 10 // Default threshold for low stock
   },
   reservedQuantity: {
     type: Number,

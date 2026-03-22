@@ -1,3 +1,21 @@
+# Low Stock Email Notification
+
+This service supports automatic supplier notification when product stock drops below a threshold. To enable email notifications, set the following environment variables:
+
+```
+NOTIFY_EMAIL_USER=your_email@gmail.com
+NOTIFY_EMAIL_PASS=your_email_password_or_app_password
+```
+
+These credentials are used for sending low-stock alerts to suppliers. For security, use an app password or environment secret manager in production.
+
+**Product Schema Changes:**
+- `lowStockNotified` (Boolean): Tracks if notification was sent for current low-stock event.
+- `lowStockThreshold` (Number): Threshold for low stock (default: 10).
+
+**Notification Logic:**
+- When product quantity drops to or below `lowStockThreshold` and `lowStockNotified` is false, an email is sent to the supplier and the flag is set to true.
+- When stock is replenished above the threshold, the flag is reset.
 # Inventory Service - Node.js/Express
 
 Product catalog and inventory management microservice for the E-Commerce application.

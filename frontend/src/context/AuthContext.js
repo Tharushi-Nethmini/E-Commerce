@@ -9,6 +9,7 @@ const AuthContext = createContext({})
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [token, setToken] = useState(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -16,10 +17,10 @@ export const AuthProvider = ({ children }) => {
   }, [])
 
   const checkAuth = async () => {
-    const token = Cookies.get('token')
+    const tokenValue = Cookies.get('token')
     const userData = Cookies.get('user')
-    
-    if (token && userData) {
+    setToken(tokenValue || null)
+    if (tokenValue && userData) {
       try {
         const parsedUser = JSON.parse(userData)
         setUser(parsedUser)
@@ -38,13 +39,12 @@ export const AuthProvider = ({ children }) => {
         password
       })
 
-      const { token, user: userData } = response.data
-      
+      const { token: loginToken, user: userData } = response.data
       // Store in cookies
-      Cookies.set('token', token, { expires: 7 })
+      Cookies.set('token', loginToken, { expires: 7 })
       Cookies.set('user', JSON.stringify(userData), { expires: 7 })
-      
       setUser(userData)
+      setToken(loginToken)
       return { success: true }
     } catch (error) {
       console.error('Login error:', error)
@@ -58,14 +58,12 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       const response = await api.post(`${process.env.NEXT_PUBLIC_API_USER_SERVICE}/api/users/register`, userData)
-      
-      const { token, user: newUser } = response.data
-      
+      const { token: regToken, user: newUser } = response.data
       // Store in cookies
-      Cookies.set('token', token, { expires: 7 })
+      Cookies.set('token', regToken, { expires: 7 })
       Cookies.set('user', JSON.stringify(newUser), { expires: 7 })
-      
       setUser(newUser)
+      setToken(regToken)
       return { success: true }
     } catch (error) {
       console.error('Registration error:', error)
@@ -80,6 +78,7 @@ export const AuthProvider = ({ children }) => {
     Cookies.remove('token')
     Cookies.remove('user')
     setUser(null)
+    setToken(null)
     router.push('/login')
   }
 
@@ -90,7 +89,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, loading, token, login, register, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   )

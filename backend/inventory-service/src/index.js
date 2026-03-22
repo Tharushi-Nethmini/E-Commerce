@@ -24,6 +24,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Routes
 app.use('/api/inventory', require('./routes/inventoryRoutes'));
+app.use('/api/notifications', require('./routes/notificationRoutes'));
 
 // Health check
 app.get('/health', (req, res) => {

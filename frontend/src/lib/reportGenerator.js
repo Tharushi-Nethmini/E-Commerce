@@ -1,3 +1,162 @@
+// ────────────────────────── PRODUCTS PDF ──────────────────────────
+
+export async function downloadProductsPDF({ products, generatedAt }) {
+  const { jsPDF } = await import('jspdf');
+  const autoTable = (await import('jspdf-autotable')).default;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+
+  // Brand header
+  doc.setFillColor(...BRAND);
+  doc.rect(0, 0, pageW, 30, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(22);
+  doc.text('NexMart', 14, 14);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.text('Products Report', 14, 22);
+  const dateStr = generatedAt.toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' });
+  doc.text(`Generated: ${dateStr}`, pageW - 14, 22, { align: 'right' });
+
+  let y = 40;
+
+  // KPI summary (like analytics)
+  const totalProducts = products.length;
+  const categories = [...new Set(products.map(p => p.category || '-'))];
+  const statusCounts = products.reduce((acc, p) => {
+    acc[p.status] = (acc[p.status] || 0) + 1;
+    return acc;
+  }, {});
+  autoTable(doc, {
+    startY: y,
+    head: [['Metric', 'Value']],
+    body: [
+      ['Total Products', String(totalProducts)],
+      ['Categories', categories.join(', ')],
+      ['Active', String(statusCounts['ACTIVE'] || 0)],
+      ['Pending', String(statusCounts['PENDING'] || 0)],
+      ['Rejected', String(statusCounts['REJECTED'] || 0)],
+    ],
+    headStyles: { fillColor: BRAND, textColor: 255, fontStyle: 'bold', fontSize: 9 },
+    alternateRowStyles: { fillColor: STRIPE },
+    styles: { fontSize: 9, cellPadding: 3 },
+    margin: { left: 14, right: 14 },
+    theme: 'grid',
+    columnStyles: { 0: { fontStyle: 'bold', cellWidth: 40 } },
+  });
+  y = doc.lastAutoTable.finalY + 18;
+
+  // Section header
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.setTextColor(...BRAND);
+  doc.text('Products List', 14, y);
+  y += 7;
+
+  autoTable(doc, {
+    startY: y,
+    head: [[
+      'Name', 'Description', 'Category', 'Price', 'Stock', 'Supplier', 'Status', 'Rejection Reason'
+    ]],
+    body: products.map(p => [
+      p.name,
+      p.description,
+      p.category,
+      fmt(p.price),
+      String(p.stock),
+      p.supplier,
+      p.status,
+      p.rejectionReason
+    ]),
+    headStyles: { fillColor: BRAND, textColor: 255, fontStyle: 'bold', fontSize: 9 },
+    alternateRowStyles: { fillColor: STRIPE },
+    styles: { fontSize: 9, cellPadding: 3, overflow: 'linebreak' },
+    margin: { left: 14, right: 14 },
+    theme: 'grid',
+    columnStyles: {
+      0: { cellWidth: 32 }, // Name
+      1: { cellWidth: 48 }, // Description
+      2: { cellWidth: 24 }, // Category
+      3: { cellWidth: 20 }, // Price
+      4: { cellWidth: 16 }, // Stock
+      5: { cellWidth: 28 }, // Supplier
+      6: { cellWidth: 22 }, // Status
+      7: { cellWidth: 36 }, // Rejection Reason
+    },
+  });
+
+  // Footer
+  const pages = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= pages; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(...GRAY);
+    doc.text(
+      `NexMart Confidential  ·  Page ${i} of ${pages}`,
+      pageW / 2, pageH - 8,
+      { align: 'center' }
+    );
+  }
+  doc.save(`NexMart-Products-${generatedAt.toISOString().slice(0, 10)}.pdf`);
+}
+
+// ────────────────────────── PRODUCTS EXCEL ──────────────────────────
+export async function downloadProductsExcel({ products, generatedAt }) {
+  const XLSX = await import('xlsx');
+  const wb = XLSX.utils.book_new();
+  const dateStr = generatedAt.toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' });
+  const totalProducts = products.length;
+  const categories = [...new Set(products.map(p => p.category || '-'))];
+  const statusCounts = products.reduce((acc, p) => {
+    acc[p.status] = (acc[p.status] || 0) + 1;
+    return acc;
+  }, {});
+  // KPI summary sheet
+  const kpiRows = [
+    ['NexMart — Products Report'],
+    [`Generated: ${dateStr}`],
+    [],
+    ['Metric', 'Value'],
+    ['Total Products', totalProducts],
+    ['Categories', categories.join(', ')],
+    ['Active', statusCounts['ACTIVE'] || 0],
+    ['Pending', statusCounts['PENDING'] || 0],
+    ['Rejected', statusCounts['REJECTED'] || 0],
+  ];
+  const wsKPI = XLSX.utils.aoa_to_sheet(kpiRows);
+  wsKPI['!cols'] = [{ wch: 30 }, { wch: 40 }];
+  XLSX.utils.book_append_sheet(wb, wsKPI, 'KPI Summary');
+
+  // Products table sheet
+  const rows = [
+    ['Name', 'Description', 'Category', 'Price', 'Stock', 'Supplier', 'Status', 'Rejection Reason'],
+    ...products.map(p => [
+      p.name,
+      p.description,
+      p.category,
+      Number(p.price),
+      p.stock,
+      p.supplier,
+      p.status,
+      p.rejectionReason
+    ]),
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [
+    { wch: 24 }, // Name
+    { wch: 36 }, // Description
+    { wch: 16 }, // Category
+    { wch: 12 }, // Price
+    { wch: 10 }, // Stock
+    { wch: 20 }, // Supplier
+    { wch: 14 }, // Status
+    { wch: 24 }, // Rejection Reason
+  ];
+  XLSX.utils.book_append_sheet(wb, ws, 'Products');
+  XLSX.writeFile(wb, `NexMart-Products-${generatedAt.toISOString().slice(0, 10)}.xlsx`);
+}
 /**
  * NexMart — Report Generator
  * Exports analytics data as PDF (jsPDF + autotable) or Excel (SheetJS).
