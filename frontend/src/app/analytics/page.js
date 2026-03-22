@@ -19,8 +19,15 @@ function AnalyticsPage() {
   // Modal state hooks (must be inside component)
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [orderQuantity, setOrderQuantity] = useState(1);
+  const [orderQuantity, setOrderQuantity] = useState('1');
   const [orderError, setOrderError] = useState('');
+
+  // Ensure selectedProduct is always set when modal is open and products change
+  useEffect(() => {
+    if (showRequestModal && lowStockProducts.length > 0 && !selectedProduct) {
+      setSelectedProduct(lowStockProducts[0]);
+    }
+  }, [showRequestModal, lowStockProducts, selectedProduct]);
 
   useEffect(() => {
     fetchAllStats()
@@ -285,15 +292,6 @@ function AnalyticsPage() {
                         {product.quantity - product.reservedQuantity}
                       </span>
                     </td>
-                    <td>
-                      <button 
-                        className="request-btn" 
-                        style={{ padding: '4px 12px', background: '#f59e0b', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}
-                        onClick={() => handleRequestClick(product)}
-                      >
-                        Request
-                      </button>
-                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -302,29 +300,117 @@ function AnalyticsPage() {
         </div>
       )}
       {/* Order Request Modal */}
-      {showRequestModal && selectedProduct && (
+      {showRequestModal && (
         <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.2)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div className="modal order-modal" style={{ background: '#fff', padding: 32, borderRadius: 8, minWidth: 320, boxShadow: '0 2px 16px rgba(0,0,0,0.15)' }}>
-            <h3 style={{ marginBottom: 16 }}>Request Stock for <span style={{ color: '#f59e0b' }}>{selectedProduct.name}</span></h3>
-            <label style={{ display: 'block', marginBottom: 16 }}>
-              Quantity:
-              <input 
-                type="number" 
-                min="1" 
-                max="9999" 
-                value={orderQuantity} 
-                onChange={e => setOrderQuantity(e.target.value)} 
-                style={{ marginLeft: 8, padding: 4, width: 80 }}
-              />
-            </label>
-            <div className="modal-actions" style={{ display: 'flex', gap: 12 }}>
-              <button onClick={submitOrderRequest} style={{ background: '#10b981', color: '#fff', border: 'none', borderRadius: 4, padding: '6px 18px', fontWeight: 600 }}>Submit</button>
-              <button onClick={() => setShowRequestModal(false)} style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 4, padding: '6px 18px', fontWeight: 600 }}>Cancel</button>
-            </div>
+          <div className="modal order-modal" style={{ background: '#fff', padding: 32, borderRadius: 8, minWidth: 340, boxShadow: '0 2px 16px rgba(0,0,0,0.15)' }}>
+            <h3 style={{ marginBottom: 16 }}>Request Stock</h3>
+            {lowStockProducts.length === 0 ? (
+              <div style={{ marginBottom: 16, color: '#ef4444' }}>No low stock products available for request.</div>
+            ) : (
+              <>
+                <label style={{ display: 'block', marginBottom: 16 }}>
+                  Product:
+                  <select
+                    value={selectedProduct ? selectedProduct._id : ''}
+                    onChange={e => {
+                      const prod = lowStockProducts.find(p => p._id === e.target.value);
+                      setSelectedProduct(prod);
+                      setOrderError('');
+                    }}
+                    style={{
+                      marginLeft: 8,
+                      padding: '8px 12px',
+                      width: 200,
+                      border: '1px solid #d1d5db',
+                      borderRadius: 6,
+                      fontSize: 16,
+                      background: '#f9fafb',
+                      color: '#222',
+                      outline: 'none',
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.04)'
+                    }}
+                  >
+                    <option value='' disabled style={{ color: '#888' }}>Select product</option>
+                    {lowStockProducts.map(product => (
+                      <option key={product._id} value={product._id} style={{ color: '#222', background: '#fff' }}>{product.name}</option>
+                    ))}
+                  </select>
+                </label>
+                <label style={{ display: 'block', marginBottom: 16 }}>
+                  Quantity:
+                  <input
+                    type="number"
+                    min="1"
+                    max="9999"
+                    value={orderQuantity}
+                    onChange={e => {
+                      let val = e.target.value.replace(/[^0-9]/g, '');
+                      // Only allow positive integers, fallback to '1' if empty or invalid
+                      if (!val || isNaN(Number(val)) || Number(val) < 1) {
+                        setOrderQuantity('1');
+                      } else {
+                        setOrderQuantity(val.replace(/^0+/, '') || '1');
+                      }
+                    }}
+                    style={{
+                      marginLeft: 8,
+                      padding: '8px 12px',
+                      width: 120,
+                      border: '1px solid #d1d5db',
+                      borderRadius: 6,
+                      fontSize: 16,
+                      background: '#f9fafb',
+                      color: '#222',
+                      outline: 'none',
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.04)'
+                    }}
+                  />
+                </label>
+                <div className="modal-actions" style={{ display: 'flex', gap: 12 }}>
+                  <button
+                    onClick={submitOrderRequest}
+                    style={{ background: '#10b981', color: '#fff', border: 'none', borderRadius: 4, padding: '6px 18px', fontWeight: 600 }}
+                    disabled={!selectedProduct || lowStockProducts.length === 0}
+                  >
+                    Submit
+                  </button>
+                  <button onClick={() => setShowRequestModal(false)} style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 4, padding: '6px 18px', fontWeight: 600 }}>Cancel</button>
+                </div>
+              </>
+            )}
             {orderError && <div className="modal-error" style={{ color: '#ef4444', marginTop: 12 }}>{orderError}</div>}
           </div>
         </div>
       )}
+      {/* Re-stock Request Button at the bottom */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 32 }}>
+        <button
+          className="restock-request-btn"
+          style={{
+            background: '#f59e0b',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 6,
+            padding: '12px 25px',
+            fontWeight: 700,
+            fontSize: 15,
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+          }}
+          onClick={() => {
+            if (lowStockProducts.length > 0) {
+              setSelectedProduct(lowStockProducts[0]);
+              setOrderQuantity('1');
+              setOrderError('');
+              setShowRequestModal(true);
+            } else {
+              alert('No low stock products available for re-stock request.');
+            }
+          }}
+        >
+          Re-stock Request
+        </button>
+      </div>
     </div>
   )
 }
@@ -342,12 +428,16 @@ const handleRequestClick = (product) => {
 // (removed duplicate AnalyticsPage definition)
 
 async function submitOrderRequest() {
-  if (!orderQuantity || orderQuantity < 1) {
+  let qty = 1;
+  if (typeof orderQuantity === 'string' && orderQuantity.trim() !== '' && !isNaN(Number(orderQuantity))) {
+    qty = Math.max(1, parseInt(orderQuantity, 10));
+  }
+  if (!qty || isNaN(qty) || qty < 1) {
     setOrderError('Please enter a valid quantity.');
     return;
   }
   if (!selectedProduct) {
-    setOrderError('No product selected.');
+    setOrderError('Please select a product.');
     return;
   }
   try {
